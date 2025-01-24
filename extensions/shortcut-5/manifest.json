@@ -1,24 +1,15 @@
 {
-  "manifest_version": 3,
-  "name": "Shortcut Extension 5",
-  "description": "Open a specific URL in a new window.",
-  "version": "1.0",
-  "action": {
-      "default_icon": {
-          "16": "favicon.png",
-          "48": "favicon.png",
-          "128": "favicon.png"
-      }
-  },
-  "background": {
+    "manifest_version": 3,
+    "name": "Omni-Shortcut 5",
+    "description": "Access to Target URL",
+    "version": "1.0",
+    "permissions": ["storage", "tabs", "activeTab"],
+    "host_permissions": ["<all_urls>"],
+    "background": {
       "service_worker": "background.js"
-  },
-  "permissions": [
-      "tabs"
-  ],
-  "icons": {
-      "16": "favicon.png",
-      "48": "favicon.png",
-      "128": "favicon.png"
+    },
+    "action": {
+      "default_title": "Access to Target URL"
+    },
+    "options_page": "option.html"
   }
-}
