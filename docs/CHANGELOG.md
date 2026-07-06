@@ -19,6 +19,8 @@
 - `docs/dev/` 디렉터리를 로컬 개발 문서 영역으로 분리하고 `.gitignore`에 등록
 - 스킴이 없는 사용자 입력 URL을 `https://`로 자동 보정하도록 변경
 - favicon 저장 로직을 단일 endpoint 의존 방식에서 다중 후보 탐색 방식으로 변경
+- 모든 사이트 접근 권한을 제거하고 favicon 조회 host permission을 `https://t0.gstatic.com/*`로 축소
+- 사용하지 않는 `activeTab` 권한 제거
 
 ## [1.0.0] - 2025-01-24
 

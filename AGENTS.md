@@ -46,7 +46,7 @@ Chrome-OmniShortcut은 여러 개의 독립적인 Chrome 확장 프로그램 패
 
 - `chrome.storage.sync`는 사용자 Chrome 계정 동기화 영역을 사용합니다. 저장 데이터 크기와 동기화 지연을 고려해야 합니다.
 - favicon은 Google favicon endpoint에서 가져옵니다. 네트워크 실패나 favicon 미제공 사이트에 대한 예외 처리를 유지해야 합니다.
-- `host_permissions`가 `<all_urls>`로 설정되어 있습니다. 권한 축소 가능성은 별도 작업으로 검토합니다.
+- 모든 사이트 접근 권한인 `<all_urls>`는 사용하지 않습니다. favicon 조회는 `https://t0.gstatic.com/*` 범위에서만 수행합니다.
 - 현재 URL 유효성 검사는 빈 값 확인 수준입니다. 프로토콜 누락, 잘못된 URL, Chrome 내부 URL 등은 추가 정책 결정이 필요합니다.
 
 ## 의사 소통

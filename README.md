@@ -51,8 +51,7 @@ Chrome에 여러 디렉터리를 각각 로드하면 툴바에 여러 바로가�
 
 - `storage`: 사용자가 저장한 URL과 아이콘 데이터를 보관합니다.
 - `tabs`: 현재 탭을 저장된 URL로 이동합니다.
-- `activeTab`: 현재 활성 탭과 상호작용합니다.
-- `<all_urls>` host permission: 사용자가 입력하는 다양한 웹사이트 URL과 favicon 조회를 지원합니다.
+- `https://t0.gstatic.com/*` host permission: 저장한 URL의 favicon을 Google favicon endpoint에서 조회합니다.
 
 ## 프로젝트 구조
 
