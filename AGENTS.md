@@ -15,13 +15,16 @@ Chrome-OmniShortcut은 여러 개의 독립적인 Chrome 확장 프로그램 패
 - `extensions/shortcut-*/option.html`: 옵션 페이지 마크업
 - `extensions/shortcut-*/option.css`: 옵션 페이지 스타일
 - `extensions/shortcut-*/option.js`: URL 저장, favicon 조회, 아이콘 저장 로직
+- `src/extension-template/`: 모든 shortcut 패키지의 공통 원본
+- `config/extensions.json`: 생성 개수와 번호별 문구 템플릿
+- `scripts/generate-extensions.js`: `extensions/shortcut-*` 결과물 생성 스크립트
 - `docs/`: 사용자와 유지보수자를 위한 공개 문서
 - `docs/dev/`: 로컬 개발용 작업 문서. `.gitignore`에 등록되어 기본 커밋 대상이 아닙니다.
 
 ## 작업 원칙
 
 1. 기존 `shortcut-*` 패키지 간 동작을 동일하게 유지합니다.
-2. 공통 동작을 수정할 때는 모든 확장 디렉터리에 같은 변경이 필요한지 확인합니다.
+2. 공통 동작을 수정할 때는 `src/extension-template/`를 먼저 수정하고 `node scripts\generate-extensions.js`를 실행합니다.
 3. Chrome 확장 권한을 추가할 때는 `README.md`와 `docs/ARCHITECTURE.md`에 이유를 문서화합니다.
 4. 사용자에게 보이는 문구나 옵션 흐름을 바꾸면 README 사용 절차도 갱신합니다.
 5. 변경 이력은 `docs/CHANGELOG.md`에 Keep a Changelog 형식으로 기록합니다.
@@ -29,6 +32,12 @@ Chrome-OmniShortcut은 여러 개의 독립적인 Chrome 확장 프로그램 패
 ## 개발 및 검증
 
 현재 별도의 빌드, 패키지 매니저, 자동 테스트 설정은 없습니다. 검증은 Chrome의 확장 관리 페이지에서 압축해제된 확장 프로그램으로 각 `extensions/shortcut-*` 디렉터리를 로드해 수동으로 수행합니다.
+
+확장 결과물을 다시 만들 때는 다음 명령을 사용합니다.
+
+```powershell
+node scripts\generate-extensions.js
+```
 
 수동 확인 항목:
 

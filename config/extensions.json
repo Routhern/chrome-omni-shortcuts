@@ -1,0 +1,11 @@
+{
+  "count": 9,
+  "start": 1,
+  "directoryTemplate": "shortcut-{digit}",
+  "nameTemplate": "Omni-Shortcut {digit}",
+  "descriptionTemplate": "Target URL access via shortcut {digit}",
+  "actionTitleTemplate": "Target URL access via shortcut {digit}",
+  "optionPageTitleTemplate": "Omni-Shortcut {digit}",
+  "optionHeadingTemplate": "Omni-Shortcut {digit} Options",
+  "manifestKeys": {}
+}

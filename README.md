@@ -45,6 +45,8 @@ URL은 `http://` 또는 `https://` 주소만 저장할 수 있습니다. `exampl
 
 Chrome에 여러 디렉터리를 각각 로드하면 툴바에 여러 바로가기 버튼을 둘 수 있습니다.
 
+기본 패키지 수는 9개지만, 생성 파이프라인을 통해 7개나 13개처럼 다른 개수로도 관리할 수 있습니다. 자세한 내용은 `docs/GENERATION.md`를 참고하세요.
+
 ## 권한 안내
 
 이 확장은 다음 Chrome 권한을 사용합니다.
@@ -70,11 +72,24 @@ Chrome-OmniShortcut/
   docs/
     ARCHITECTURE.md
     CHANGELOG.md
+    GENERATION.md
+  config/
+    extensions.json
+  scripts/
+    generate-extensions.js
+  src/
+    extension-template/
 ```
 
 ## 개발 상태
 
 현재는 별도의 빌드 과정이나 자동 테스트 설정이 없습니다. 변경 후에는 Chrome에서 각 확장을 압축해제된 확장 프로그램으로 로드해 수동으로 확인합니다.
+
+공통 확장 코드는 `src/extension-template/`에서 관리하고, 다음 명령으로 `extensions/shortcut-*` 결과물을 생성합니다.
+
+```powershell
+node scripts\generate-extensions.js
+```
 
 자세한 구조와 유지보수 기준은 `docs/ARCHITECTURE.md`를 참고하세요.
 

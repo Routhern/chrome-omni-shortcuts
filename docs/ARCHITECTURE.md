@@ -8,9 +8,15 @@ Chrome-OmniShortcut은 사용자가 지정한 URL을 Chrome 툴바 버튼으로 
 
 ## 패키지 구성
 
-각 확장 패키지는 `extensions/shortcut-N` 디렉터리에 있습니다.
+각 확장 패키지는 `extensions/shortcut-N` 디렉터리에 있습니다. 이 디렉터리들은 `src/extension-template/`와 `config/extensions.json`을 기반으로 생성됩니다.
 
 ```text
+config/
+  extensions.json
+src/
+  extension-template/
+scripts/
+  generate-extensions.js
 extensions/shortcut-N/
   manifest.json
   background.js
@@ -19,7 +25,7 @@ extensions/shortcut-N/
   option.js
 ```
 
-현재 `shortcut-1`부터 `shortcut-9`까지 9개 패키지가 있으며, `manifest.json`의 `name` 값을 제외하면 같은 구조와 같은 동작을 갖습니다.
+현재 기본 설정은 `shortcut-1`부터 `shortcut-9`까지 9개 패키지를 생성합니다. 필요하면 설정이나 생성 스크립트 인자로 7개, 13개처럼 다른 개수를 생성할 수 있습니다.
 
 ## Chrome 확장 구성
 
@@ -30,6 +36,8 @@ extensions/shortcut-N/
 - `options_page`: `option.html`
 - `permissions`: `storage`, `tabs`
 - `host_permissions`: `https://t0.gstatic.com/*`
+
+각 확장의 `description`과 `action.default_title`에는 shortcut 번호가 포함됩니다. 기본 문구는 `Target URL access via shortcut {digit}`입니다.
 
 ## 런타임 흐름
 
@@ -93,6 +101,8 @@ extensions/shortcut-N/
 | `targetUrl` | string | 툴바 버튼 클릭 시 이동할 대상 URL |
 | `iconData` | string | favicon을 canvas로 변환한 data URL |
 
+`chrome.storage.sync`는 같은 Chrome 계정에서 동기화될 수 있지만, 동기화 범위는 확장 ID 단위입니다. Windows, macOS, 여러 사용자 환경에서 같은 shortcut 설정을 공유하려면 각 생성 패키지의 확장 ID가 동일하게 유지되어야 합니다. Chrome Web Store 배포 ID를 사용하거나, 개발 배포에서는 `config/extensions.json`의 `manifestKeys`로 번호별 manifest key를 관리합니다.
+
 ## 외부 의존성
 
 런타임에서 사용하는 외부 서비스는 Google favicon 조회 endpoint입니다.
@@ -113,17 +123,16 @@ https://t0.gstatic.com/faviconV2
 
 ## 변경 시 영향 범위
 
-공통 로직은 모든 `shortcut-*` 디렉터리에 복제되어 있습니다. 특정 동작을 수정할 때는 다음 파일들이 모든 패키지에서 동일하게 바뀌어야 하는지 확인합니다.
+공통 로직은 `src/extension-template/`에서 관리하고 `scripts/generate-extensions.js`로 모든 `shortcut-*` 디렉터리에 반영합니다. 특정 동작을 수정할 때는 템플릿의 다음 파일을 먼저 수정합니다.
 
 - `background.js`
 - `option.js`
 - `option.html`
 - `option.css`
 
-확장 표시 이름이나 패키지별 메타데이터만 바꿀 때는 해당 패키지의 `manifest.json`만 수정합니다.
+확장 표시 이름, 설명, 툴바 제목, 생성 개수는 `config/extensions.json`에서 관리합니다. 확장 ID 고정용 manifest key도 이 설정 파일에서 번호별로 관리합니다.
 
 ## 향후 개선 후보
 
-- 공통 소스 디렉터리와 생성 스크립트를 도입해 복제 파일 관리 부담 줄이기
 - 선택 권한 기반 고급 favicon 탐색 기능 검토
 - 수동 검증 체크리스트 또는 간단한 자동 정적 검증 추가

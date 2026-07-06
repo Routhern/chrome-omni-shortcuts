@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Omni-Shortcut 2",
-  "description": "Target URL access via shortcut 2",
+  "name": "__SHORTCUT_NAME__",
+  "description": "__SHORTCUT_DESCRIPTION__",
   "version": "1.0",
   "permissions": [
     "storage",
@@ -14,7 +14,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Target URL access via shortcut 2"
+    "default_title": "__SHORTCUT_ACTION_TITLE__"
   },
   "options_page": "option.html"
 }
