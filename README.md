@@ -1,6 +1,6 @@
 # Chrome-OmniShortcut
 
-Chrome-OmniShortcut은 자주 여는 웹사이트를 Chrome 툴바 버튼 하나로 이동할 수 있게 해주는 바로가기 확장 모음입니다.
+Chrome-OmniShortcut은 자주 여는 웹사이트를 Chrome 툴바 버튼으로 빠르게 접근하는 확장 프로그램의 모음집입니다. 9개의 동일 기능을 갖는 확장프로그램을 사용해서 길고 편의성이 떨어지는 주소표시줄의 남은 여백을 창의적으로 대체할 수 있습니다.
 
 이 저장소에는 `Omni-Shortcut 1`부터 `Omni-Shortcut 9`까지 9개의 독립 확장 패키지가 들어 있습니다. 각 확장마다 서로 다른 URL을 저장해 두면, Chrome 툴바에 여러 개의 개인 바로가기 버튼을 둘 수 있습니다.
 
@@ -9,6 +9,7 @@ Chrome-OmniShortcut은 자주 여는 웹사이트를 Chrome 툴바 버튼 하나
 - 툴바 버튼 클릭으로 저장된 URL 열기
 - 확장별 대상 URL 저장
 - 대상 사이트의 favicon을 가져와 확장 아이콘으로 사용
+- favicon을 찾지 못해도 사이트명 기반 기본 아이콘 자동 생성
 - Chrome 동기화 저장소를 통한 URL과 아이콘 저장
 - 별도 빌드 없이 Chrome에서 바로 로드 가능
 
@@ -29,7 +30,7 @@ Chrome-OmniShortcut은 자주 여는 웹사이트를 Chrome 툴바 버튼 하나
 4. `Save URL and Set Icon` 버튼을 누릅니다.
 5. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
 
-저장 후 아이콘은 입력한 사이트의 favicon으로 바뀝니다. favicon을 가져오지 못하면 저장이 실패할 수 있습니다.
+저장 후 아이콘은 입력한 사이트의 favicon으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
 
 URL은 `http://` 또는 `https://` 주소만 저장할 수 있습니다. `example.com`처럼 프로토콜 없이 입력하면 `https://example.com/`으로 자동 보정됩니다.
 

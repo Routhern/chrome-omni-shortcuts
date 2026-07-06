@@ -40,10 +40,23 @@ extensions/shortcut-N/
 3. 기존에 저장된 `targetUrl`이 있으면 `chrome.storage.sync`에서 읽어 입력 필드에 표시합니다.
 4. 사용자가 URL을 입력하고 저장 버튼을 누릅니다.
 5. `UrlPolicy.normalize()`가 입력값을 검증하고 저장 가능한 URL로 정규화합니다.
-6. `fetchFavicon()`이 Google favicon endpoint에서 32px favicon을 가져옵니다.
-7. favicon을 data URL로 변환합니다.
+6. `FaviconManager.getIconData()`가 favicon 후보를 탐색하고 사용 가능한 아이콘을 data URL로 변환합니다.
+7. favicon을 찾지 못하면 사이트명 기반 기본 아이콘을 생성합니다.
 8. canvas에 32px 아이콘을 그린 뒤 `chrome.storage.sync`에 `targetUrl`과 `iconData`를 저장합니다.
 9. `chrome.action.setIcon()`으로 현재 확장 아이콘을 갱신합니다.
+
+## Favicon 정책
+
+저장 시점의 favicon 선택은 다음 순서로 진행됩니다.
+
+1. 대상 페이지의 HTML을 읽고 `link rel="icon"` 계열 태그를 찾습니다.
+2. `media="(prefers-color-scheme: dark)"` 또는 `media="(prefers-color-scheme: light)"`가 있으면 현재 브라우저 색상 모드와 일치하는 후보에 가산점을 줍니다.
+3. `sizes` 속성이 있으면 32px에 가까운 후보를 우선합니다.
+4. 페이지에서 후보를 찾지 못하거나 후보 로드에 실패하면 대상 origin의 `/favicon.ico`를 시도합니다.
+5. 그래도 실패하면 Google favicon endpoint를 시도합니다.
+6. 모든 외부 아이콘 후보가 실패하면 호스트명 첫 글자를 사용한 기본 아이콘을 canvas로 생성합니다.
+
+후보 간 중복 URL은 제거하고, 점수가 높은 후보부터 순차적으로 시도합니다. 각 후보는 실제 이미지로 로드되는지 확인한 뒤 저장합니다.
 
 ## URL 정책
 
@@ -85,7 +98,7 @@ extensions/shortcut-N/
 
 ## 외부 의존성
 
-런타임에서 사용하는 외부 서비스는 favicon 조회 endpoint입니다.
+런타임에서 fallback으로 사용하는 외부 서비스는 Google favicon 조회 endpoint입니다.
 
 ```text
 https://t0.gstatic.com/faviconV2
@@ -97,7 +110,7 @@ https://t0.gstatic.com/faviconV2
 
 - `<all_urls>` 권한은 넓은 권한입니다. 기능상 필요한 범위를 재검토하고 축소 가능성을 확인해야 합니다.
 - 옵션 페이지는 저장 시점에 URL 형식 검증, `https://` 자동 보정, `http`/`https` 허용 스킴 정책을 적용합니다.
-- favicon 조회는 네트워크 요청에 의존합니다. 실패 시 사용자에게 더 구체적인 오류를 제공할 수 있습니다.
+- favicon 조회는 대상 페이지, `/favicon.ico`, Google favicon endpoint 순서로 시도하며, 모두 실패하면 로컬에서 기본 아이콘을 생성합니다.
 - `chrome.storage.sync`는 동기화 저장소이므로 데이터 크기 제한과 동기화 지연을 고려해야 합니다.
 
 ## 변경 시 영향 범위
@@ -115,5 +128,4 @@ https://t0.gstatic.com/faviconV2
 
 - 공통 소스 디렉터리와 생성 스크립트를 도입해 복제 파일 관리 부담 줄이기
 - 권한 범위 축소
-- favicon 실패 시 기본 아이콘 fallback 제공
 - 수동 검증 체크리스트 또는 간단한 자동 정적 검증 추가

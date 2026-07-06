@@ -30,7 +30,7 @@ class OptionsManager {
 
     try {
       const targetUrl = validation.url;
-      const iconData = await this.fetchFavicon(targetUrl);
+      const iconData = await FaviconManager.getIconData(targetUrl);
       await this.saveUrlAndIcon(targetUrl, iconData);
       this.targetUrlInput.value = targetUrl;
       this.showStatus("URL and Icon saved!", true);
@@ -38,21 +38,6 @@ class OptionsManager {
       console.error(error);
       this.showStatus("Failed to fetch or set the icon.", false);
     }
-  }
-
-  async fetchFavicon(url) {
-    const faviconUrl = `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${url}&size=32`;
-    
-    const response = await fetch(faviconUrl);
-    if (!response.ok) throw new Error("Failed to fetch favicon");
-    
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 
   saveUrlAndIcon(targetUrl, iconData) {
@@ -89,6 +74,279 @@ class OptionsManager {
       this.status.textContent = '';
       this.status.style.color = '';
     }, 2000);
+  }
+}
+
+class FaviconManager {
+  static async getIconData(targetUrl) {
+    const candidates = await this.getCandidates(targetUrl);
+
+    for (const candidate of candidates) {
+      try {
+        const iconData = await this.fetchIcon(candidate.url);
+        await this.assertImageLoads(iconData);
+        return iconData;
+      } catch (error) {
+        console.warn("Skipping favicon candidate:", candidate.url, error);
+      }
+    }
+
+    return this.createFallbackIcon(targetUrl);
+  }
+
+  static async getCandidates(targetUrl) {
+    const pageUrl = new URL(targetUrl);
+    const discoveredCandidates = await this.discoverFromPage(targetUrl);
+    const candidates = [
+      ...discoveredCandidates,
+      {
+        url: new URL("/favicon.ico", pageUrl.origin).href,
+        score: 20
+      },
+      {
+        url: this.getGoogleFaviconUrl(targetUrl),
+        score: 10
+      }
+    ];
+
+    return this.dedupeCandidates(candidates)
+      .sort((left, right) => right.score - left.score);
+  }
+
+  static async discoverFromPage(targetUrl) {
+    try {
+      const response = await fetch(targetUrl, {
+        credentials: "omit",
+        redirect: "follow"
+      });
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+
+      if (!contentType.includes("text/html")) {
+        return [];
+      }
+
+      const html = await response.text();
+      const documentNode = new DOMParser().parseFromString(html, "text/html");
+      const links = [...documentNode.querySelectorAll("link[rel][href]")];
+
+      return links
+        .map((link) => this.createCandidateFromLink(link, response.url || targetUrl))
+        .filter(Boolean);
+    } catch (error) {
+      console.warn("Favicon discovery failed:", error);
+      return [];
+    }
+  }
+
+  static createCandidateFromLink(link, baseUrl) {
+    const rel = (link.getAttribute("rel") || "").toLowerCase();
+
+    if (!this.isIconRel(rel)) {
+      return null;
+    }
+
+    const href = link.getAttribute("href");
+
+    if (!href) {
+      return null;
+    }
+
+    try {
+      return {
+        url: new URL(href, baseUrl).href,
+        score: this.scoreLink(link, rel)
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  static isIconRel(rel) {
+    return rel.split(/\s+/).some((token) => [
+      "icon",
+      "shortcut",
+      "apple-touch-icon",
+      "apple-touch-icon-precomposed",
+      "mask-icon"
+    ].includes(token));
+  }
+
+  static scoreLink(link, rel) {
+    let score = 50;
+    const media = (link.getAttribute("media") || "").toLowerCase();
+    const sizes = (link.getAttribute("sizes") || "").toLowerCase();
+
+    if (rel.includes("apple-touch-icon")) {
+      score += 10;
+    }
+
+    if (rel.includes("mask-icon")) {
+      score -= 10;
+    }
+
+    score += this.scoreColorScheme(media);
+    score += this.scoreSize(sizes);
+
+    return score;
+  }
+
+  static scoreColorScheme(media) {
+    if (!media.includes("prefers-color-scheme")) {
+      return 0;
+    }
+
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    if (prefersDark && media.includes("dark")) {
+      return 30;
+    }
+
+    if (!prefersDark && media.includes("light")) {
+      return 30;
+    }
+
+    return -20;
+  }
+
+  static scoreSize(sizes) {
+    if (!sizes || sizes === "any") {
+      return 0;
+    }
+
+    const sizeScores = sizes.split(/\s+/)
+      .map((size) => size.match(/^(\d+)x(\d+)$/))
+      .filter(Boolean)
+      .map((match) => Math.min(Number(match[1]), Number(match[2])))
+      .map((size) => {
+        if (size === 32) return 25;
+        if (size > 32) return 15;
+        if (size >= 16) return 5;
+        return -10;
+      });
+
+    return sizeScores.length ? Math.max(...sizeScores) : 0;
+  }
+
+  static dedupeCandidates(candidates) {
+    const uniqueCandidates = new Map();
+
+    for (const candidate of candidates) {
+      if (!candidate || !candidate.url) {
+        continue;
+      }
+
+      const existing = uniqueCandidates.get(candidate.url);
+
+      if (!existing || candidate.score > existing.score) {
+        uniqueCandidates.set(candidate.url, candidate);
+      }
+    }
+
+    return [...uniqueCandidates.values()];
+  }
+
+  static getGoogleFaviconUrl(targetUrl) {
+    const params = new URLSearchParams({
+      client: "SOCIAL",
+      type: "FAVICON",
+      fallback_opts: "TYPE,SIZE,URL",
+      url: targetUrl,
+      size: "32"
+    });
+
+    return `https://t0.gstatic.com/faviconV2?${params.toString()}`;
+  }
+
+  static async fetchIcon(iconUrl) {
+    const response = await fetch(iconUrl, {
+      credentials: "omit",
+      redirect: "follow"
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch favicon");
+    }
+
+    const blob = await response.blob();
+
+    if (!this.isSupportedImageBlob(blob, iconUrl)) {
+      throw new Error("Favicon response is not an image");
+    }
+
+    return this.blobToDataUrl(blob);
+  }
+
+  static isSupportedImageBlob(blob, iconUrl) {
+    if (blob.type.startsWith("image/")) {
+      return true;
+    }
+
+    const urlPath = new URL(iconUrl).pathname.toLowerCase();
+
+    return !blob.type && /\.(ico|png|jpg|jpeg|gif|webp|svg)$/.test(urlPath);
+  }
+
+  static blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  static assertImageLoads(iconData) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = resolve;
+      img.onerror = () => reject(new Error("Favicon image could not be loaded"));
+      img.src = iconData;
+    });
+  }
+
+  static createFallbackIcon(targetUrl) {
+    const parsedUrl = new URL(targetUrl);
+    const label = this.getFallbackLabel(parsedUrl.hostname);
+    const canvas = document.createElement("canvas");
+    canvas.width = 32;
+    canvas.height = 32;
+
+    const ctx = canvas.getContext("2d");
+    const hue = this.hashString(parsedUrl.hostname) % 360;
+    const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+
+    gradient.addColorStop(0, `hsl(${hue}, 70%, 42%)`);
+    gradient.addColorStop(1, `hsl(${(hue + 35) % 360}, 68%, 28%)`);
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 32, 32);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
+    ctx.fillRect(0, 0, 32, 14);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, 16, 17);
+
+    return canvas.toDataURL();
+  }
+
+  static getFallbackLabel(hostname) {
+    return hostname
+      .replace(/^www\./i, "")
+      .charAt(0)
+      .toUpperCase() || "?";
+  }
+
+  static hashString(value) {
+    return [...value].reduce((hash, character) => {
+      return ((hash << 5) - hash + character.charCodeAt(0)) >>> 0;
+    }, 0);
   }
 }
 
