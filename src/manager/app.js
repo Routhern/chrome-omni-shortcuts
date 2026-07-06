@@ -68,6 +68,12 @@ class ManagerApp {
     this.countInput = document.getElementById("count-input");
     this.pruneCheckbox = document.getElementById("prune-checkbox");
     this.generateButton = document.getElementById("generate-button");
+    this.generateConfirmDialog = document.getElementById("generate-confirm-dialog");
+    this.generateConfirmMessage = document.getElementById("generate-confirm-message");
+    this.generateConfirmAccept = document.getElementById("generate-confirm-accept");
+    this.auditKeysButton = document.getElementById("audit-keys-button");
+    this.autofixKeysButton = document.getElementById("autofix-keys-button");
+    this.keyAuditSummary = document.getElementById("key-audit-summary");
     this.saveShortcutsButton = document.getElementById("save-shortcuts-button");
     this.shortcutList = document.getElementById("shortcut-list");
     this.statusMessage = document.getElementById("status-message");
@@ -77,6 +83,9 @@ class ManagerApp {
 
     this.config = null;
     this.generated = [];
+    this.keyAudit = null;
+    this.keyAuditByDigit = new Map();
+    this.pendingGenerateConfirm = null;
   }
 
   async start() {
@@ -93,6 +102,8 @@ class ManagerApp {
     document.getElementById("theme-toggle").addEventListener("click", () => this.theme.cycle());
     this.generateButton.addEventListener("click", () => this.saveAndGenerate());
     this.saveShortcutsButton.addEventListener("click", () => this.saveShortcuts());
+    this.auditKeysButton?.addEventListener("click", () => this.refreshKeyAudit(true));
+    this.autofixKeysButton?.addEventListener("click", () => this.autoFixKeys());
 
     const importFile = document.getElementById("import-file");
     document.getElementById("export-button").addEventListener("click", () => this.exportConfig());
@@ -104,15 +115,48 @@ class ManagerApp {
       }
     });
 
+    if (this.generateConfirmDialog) {
+      this.generateConfirmDialog.addEventListener("close", () => {
+        if (!this.pendingGenerateConfirm) {
+          return;
+        }
+
+        const resolve = this.pendingGenerateConfirm;
+        this.pendingGenerateConfirm = null;
+        resolve(this.generateConfirmDialog.returnValue === "confirm");
+      });
+    }
+
     await this.refreshState();
   }
 
   async refreshState() {
-    const response = await fetch("/api/state");
-    const state = await response.json();
+    const [stateResponse, auditResponse] = await Promise.all([fetch("/api/state"), fetch("/api/key-audit")]);
+    const state = await stateResponse.json();
     this.config = state.config;
     this.generated = state.generated;
+
+    if (auditResponse.ok) {
+      const payload = await auditResponse.json();
+      this.setKeyAudit(payload.audit);
+    } else {
+      this.setKeyAudit(null);
+    }
+
     this.render();
+  }
+
+  setKeyAudit(audit) {
+    this.keyAudit = audit;
+    this.keyAuditByDigit = new Map();
+
+    if (!audit?.items) {
+      return;
+    }
+
+    for (const item of audit.items) {
+      this.keyAuditByDigit.set(String(item.digit), item);
+    }
   }
 
   render() {
@@ -120,7 +164,39 @@ class ManagerApp {
     this.generatedStatus.textContent = this.i18n.t("count.generatedStatus", {
       generated: this.generated.length
     });
+    this.renderKeyAuditSummary();
     this.renderShortcuts();
+  }
+
+  renderKeyAuditSummary() {
+    if (!this.keyAudit?.summary) {
+      this.keyAuditSummary.textContent = this.i18n.t("keyAudit.summaryUnavailable");
+      this.keyAuditSummary.classList.add("is-error");
+
+      if (this.autofixKeysButton) {
+        this.autofixKeysButton.disabled = true;
+      }
+
+      return;
+    }
+
+    const { summary } = this.keyAudit;
+    const hasIssues = summary.actionNeeded > 0;
+    const summaryKey = hasIssues ? "keyAudit.summaryIssues" : "keyAudit.summaryHealthy";
+
+    this.keyAuditSummary.textContent = this.i18n.t(summaryKey, {
+      checked: summary.checked,
+      ok: summary.ok,
+      missing: summary.missing,
+      invalid: summary.invalid,
+      duplicate: summary.duplicate
+    });
+
+    this.keyAuditSummary.classList.toggle("is-error", hasIssues);
+
+    if (this.autofixKeysButton) {
+      this.autofixKeysButton.disabled = !hasIssues;
+    }
   }
 
   renderShortcuts() {
@@ -150,6 +226,8 @@ class ManagerApp {
     const openLink = row.querySelector(".shortcut-open");
     const urlFeedback = row.querySelector(".url-feedback");
     const keyFeedback = row.querySelector(".key-feedback");
+    const keyAuditFeedback = row.querySelector(".key-audit-feedback");
+    const auditEntry = this.keyAuditByDigit.get(String(digit));
 
     row.querySelector(".shortcut-digit").textContent = paddedDigit;
     labelInput.value = entry.label;
@@ -191,14 +269,64 @@ class ManagerApp {
         keyInput.value = payload.key;
         keyFeedback.textContent = this.i18n.t("validate.keyOk", { id: payload.id });
         keyFeedback.classList.remove("is-error");
+        await this.refreshKeyAudit(false);
       } catch (error) {
         keyFeedback.textContent = this.i18n.t("status.error", { message: error.message });
         keyFeedback.classList.add("is-error");
       }
     });
 
+    this.applyAuditFeedback(row, keyAuditFeedback, auditEntry);
+
     applyUrlPreview(entry.url);
     return row;
+  }
+
+  applyAuditFeedback(row, feedbackElement, auditEntry) {
+    if (!feedbackElement) {
+      return;
+    }
+
+    row.classList.remove("key-audit-ok", "key-audit-warning", "key-audit-error");
+    feedbackElement.classList.remove("is-warning", "is-error");
+
+    if (!auditEntry) {
+      feedbackElement.textContent = this.i18n.t("keyAudit.row.unknown");
+      feedbackElement.classList.add("is-error");
+      row.classList.add("key-audit-error");
+      return;
+    }
+
+    if (auditEntry.issueCode === "OK") {
+      feedbackElement.textContent = this.i18n.t("keyAudit.row.ok", {
+        id: auditEntry.extensionId
+      });
+      row.classList.add("key-audit-ok");
+      return;
+    }
+
+    if (auditEntry.issueCode === "MISSING_KEY") {
+      feedbackElement.textContent = this.i18n.t("keyAudit.row.missing");
+      feedbackElement.classList.add("is-warning");
+      row.classList.add("key-audit-warning");
+      return;
+    }
+
+    if (auditEntry.issueCode === "DUPLICATE_ID") {
+      feedbackElement.textContent = this.i18n.t("keyAudit.row.duplicate", {
+        id: auditEntry.extensionId,
+        digits: (auditEntry.duplicateWith || []).join(", ")
+      });
+      feedbackElement.classList.add("is-error");
+      row.classList.add("key-audit-error");
+      return;
+    }
+
+    feedbackElement.textContent = this.i18n.t("keyAudit.row.invalid", {
+      message: auditEntry.issue || ""
+    });
+    feedbackElement.classList.add("is-error");
+    row.classList.add("key-audit-error");
   }
 
   validateUrl(url) {
@@ -314,17 +442,123 @@ class ManagerApp {
     try {
       await this.putConfig({ shortcuts: this.collectShortcuts() });
       this.showStatus(this.i18n.t("status.saved"), true);
-      this.render();
+      await this.refreshState();
     } catch (error) {
       this.showStatus(this.i18n.t("status.error", { message: error.message }), false);
     }
   }
 
+  async refreshKeyAudit(showToast) {
+    try {
+      if (this.auditKeysButton) {
+        this.auditKeysButton.setAttribute("aria-busy", "true");
+      }
+
+      const response = await fetch("/api/key-audit");
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || response.statusText);
+      }
+
+      this.setKeyAudit(payload.audit);
+      this.render();
+
+      if (showToast) {
+        this.showStatus(this.i18n.t("status.keyAuditRefreshed"), true);
+      }
+    } catch (error) {
+      this.showStatus(this.i18n.t("status.error", { message: error.message }), false);
+    } finally {
+      if (this.auditKeysButton) {
+        this.auditKeysButton.removeAttribute("aria-busy");
+      }
+    }
+  }
+
+  async autoFixKeys() {
+    if (!window.confirm(this.i18n.t("confirm.autofixKeys"))) {
+      return;
+    }
+
+    try {
+      if (this.autofixKeysButton) {
+        this.autofixKeysButton.setAttribute("aria-busy", "true");
+      }
+
+      const response = await fetch("/api/key-autofix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope: "active" })
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || response.statusText);
+      }
+
+      let generatedCount = this.generated.length;
+
+      if (payload.updated.length > 0) {
+        const generateResponse = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prune: false })
+        });
+        const generatePayload = await generateResponse.json();
+
+        if (!generateResponse.ok) {
+          throw new Error(generatePayload.error || generateResponse.statusText);
+        }
+
+        generatedCount = generatePayload.generated.length;
+      }
+
+      this.config = payload.config;
+      this.setKeyAudit(payload.audit);
+      await this.refreshState();
+      this.showStatus(
+        this.i18n.t("status.keyAutofixDone", {
+          count: payload.updated.length,
+          generated: generatedCount
+        }),
+        true
+      );
+    } catch (error) {
+      this.showStatus(this.i18n.t("status.error", { message: error.message }), false);
+    } finally {
+      if (this.autofixKeysButton) {
+        this.autofixKeysButton.removeAttribute("aria-busy");
+      }
+    }
+  }
+
+  async confirmGenerate(count) {
+    const confirmKey = this.pruneCheckbox.checked ? "confirm.generatePrune" : "confirm.generate";
+    const message = this.i18n.t(confirmKey, { count });
+
+    if (!this.generateConfirmDialog || typeof this.generateConfirmDialog.showModal !== "function") {
+      return window.confirm(message);
+    }
+
+    if (this.generateConfirmDialog.open) {
+      this.generateConfirmDialog.close("cancel");
+    }
+
+    this.generateConfirmMessage.textContent = message;
+    this.generateConfirmDialog.showModal();
+    this.generateConfirmAccept?.focus();
+
+    return new Promise((resolve) => {
+      this.pendingGenerateConfirm = resolve;
+    });
+  }
+
   async saveAndGenerate() {
     const count = Number(this.countInput.value);
-    const confirmKey = this.pruneCheckbox.checked ? "confirm.generatePrune" : "confirm.generate";
 
-    if (!window.confirm(this.i18n.t(confirmKey, { count }))) {
+    if (!(await this.confirmGenerate(count))) {
       return;
     }
 

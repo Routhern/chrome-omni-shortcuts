@@ -26,10 +26,14 @@
 - 재생성 전 덮어쓰기·삭제 내용을 알리는 확인 창 추가
 - README에 수동 확장 로드·핀 고정 가이드 추가
 - 매니저에 manifest key 생성 버튼과 `POST /api/keygen` API 추가 (RSA-2048 공개키 + 확장 ID 반환)
+- Manifest key 감사/복구 기능 추가: `GET /api/key-audit`, `POST /api/key-autofix`, UI의 키 상태 패널/행별 경고/자동복구 버튼
+- UI 자동복구 버튼이 key 교체 후 확장 재생성까지 자동으로 이어지도록 개선
 
 ### Fixed
 
 - manifest `key`에 base64 공개키 대신 32자 확장 ID가 저장되던 문제 수정. 잘못된 key가 주입된 확장은 Chrome 재시작 시 로드에 실패해 목록에서 사라졌음. 서버·클라이언트 key 검증을 base64 문자 검사에서 실제 SPKI 공개키 파싱 검증으로 강화하고, `config/extensions.json`의 기존 잘못된 key 9개를 유효한 키로 교체
+- 매니저의 `Save & Generate`가 브라우저 네이티브 `window.confirm()` 대화상자에 막혀 생성이 진행되지 않던 환경을 위해, 페이지 내부 `dialog` 기반 확인 창으로 교체
+- 확장 재시작 후 사라짐 이슈를 줄이기 위해 key 저장 검증을 강화(공백 제거 canonical base64, DER SPKI, RSA, 2048비트 이상)하고 key 중복 확장 ID 충돌을 감지/자동복구하도록 개선
 
 ### Changed
 

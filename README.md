@@ -42,9 +42,11 @@ URL 변경은 숏컷 매니저에서 하고, 재생성 후 `chrome://extensions`
 URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 페이지는 제거되었습니다.)
 
 1. 숏컷 매니저를 엽니다. Windows에서는 `Open-Manager.bat`, macOS에서는 `open-manager.command`를 더블클릭하거나, 터미널에서 `node scripts\manager.js`를 실행합니다.
-2. 원하는 숏컷의 대상 URL을 입력하고 `Save & Generate`를 누릅니다.
+2. 원하는 숏컷의 대상 URL을 입력하고 `Save & Generate`를 누른 뒤, 페이지 안의 확인 창에서 생성 여부를 확인합니다.
 3. Chrome 확장 관리 화면에서 해당 확장을 새로고침(또는 새로 로드)합니다.
 4. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
+
+확장이 재시작 후 사라지는 문제가 있었다면, 매니저 상단의 `키 상태 다시 검사`로 key 충돌/오류를 확인하고 `문제 키 자동복구`를 실행하세요. 자동복구는 문제 key 교체와 확장 재생성까지 한 번에 수행합니다.
 
 확장이 로드되면 아이콘은 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
 
@@ -80,6 +82,8 @@ node scripts\manager.js
 - 라이트/다크 테마 전환, 영어/한국어 UI 전환
 
 manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS에서 같은 확장으로 인식되고, `chrome.storage.sync` 데이터가 기기 간에 연동됩니다. key는 base64 공개키여야 하며(32자 확장 ID가 아님), 매니저의 `키 생성` 버튼으로 만들 수 있습니다. 잘못된 key가 들어가면 Chrome 재시작 시 확장이 로드에 실패해 목록에서 사라지므로 주의하세요. 매니저에 저장한 URL은 생성된 패키지에 기본 대상 URL로 주입됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
+
+매니저는 key를 저장할 때 SPKI/RSA/2048비트 이상을 검증하고, 중복 확장 ID를 key 감사에서 탐지합니다.
 
 ## 권한 안내
 

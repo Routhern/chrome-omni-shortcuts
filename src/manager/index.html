@@ -48,6 +48,13 @@
           <button id="generate-button" data-i18n="count.generate">Save &amp; Generate</button>
           <small id="generated-status"></small>
         </footer>
+        <div id="key-health-panel">
+          <small id="key-audit-summary">Manifest key 상태를 불러오는 중…</small>
+          <div class="key-health-actions">
+            <button id="audit-keys-button" class="secondary" data-i18n="keyAudit.auditButton">키 상태 다시 검사</button>
+            <button id="autofix-keys-button" class="contrast" data-i18n="keyAudit.autofixButton">문제 키 자동복구</button>
+          </div>
+        </div>
       </article>
     </section>
 
@@ -87,6 +94,19 @@
     <small id="status-message" role="status"></small>
   </footer>
 
+  <dialog id="generate-confirm-dialog">
+    <form method="dialog">
+      <article>
+        <header data-i18n="confirm.heading">Confirm generation</header>
+        <p id="generate-confirm-message"></p>
+        <footer class="dialog-actions">
+          <button value="cancel" class="secondary" data-i18n="confirm.cancel">Cancel</button>
+          <button id="generate-confirm-accept" value="confirm" data-i18n="confirm.accept">Generate</button>
+        </footer>
+      </article>
+    </form>
+  </dialog>
+
   <template id="shortcut-row-template">
     <tr class="shortcut-row">
       <td class="cell-no">
@@ -110,6 +130,7 @@
           <button class="verify-key secondary" data-i18n="table.verify">ID</button>
         </div>
         <small class="key-feedback"></small>
+        <small class="key-audit-feedback"></small>
       </td>
       <td class="cell-status">
         <span class="shortcut-generated-badge"></span>

@@ -12,6 +12,37 @@ header.container nav button#theme-toggle {
   align-self: end;
 }
 
+#key-health-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--pico-muted-border-color);
+}
+
+.key-health-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.key-health-actions button {
+  width: auto;
+  margin-bottom: 0;
+}
+
+#key-audit-summary {
+  font-size: 0.8em;
+  color: var(--pico-ins-color);
+}
+
+#key-audit-summary.is-error {
+  color: var(--pico-del-color);
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -100,6 +131,38 @@ header.container nav button#theme-toggle {
   word-break: break-all;
 }
 
+.key-audit-feedback {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72em;
+  color: var(--pico-muted-color);
+  word-break: break-word;
+}
+
+.key-audit-feedback:empty {
+  display: none;
+}
+
+.key-audit-feedback.is-warning {
+  color: var(--pico-color-amber-550, #b57600);
+}
+
+.key-audit-feedback.is-error {
+  color: var(--pico-del-color);
+}
+
+.shortcut-row.key-audit-warning .shortcut-key {
+  border-color: var(--pico-color-amber-550, #b57600);
+}
+
+.shortcut-row.key-audit-error .shortcut-key {
+  border-color: var(--pico-del-color);
+}
+
+.shortcut-row.key-audit-ok .shortcut-key {
+  border-color: var(--pico-ins-color);
+}
+
 .url-feedback:empty,
 .key-feedback:empty {
   display: none;
@@ -145,6 +208,38 @@ header.container nav button#theme-toggle {
 }
 
 .shortcuts-footer button {
+  width: auto;
+  margin-bottom: 0;
+}
+
+#generate-confirm-dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  width: min(34rem, calc(100vw - 2rem));
+}
+
+#generate-confirm-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+#generate-confirm-dialog form,
+#generate-confirm-dialog article {
+  margin: 0;
+}
+
+#generate-confirm-message {
+  white-space: pre-line;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dialog-actions button {
   width: auto;
   margin-bottom: 0;
 }

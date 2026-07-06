@@ -34,7 +34,9 @@ node scripts\manager.js
 - URL 입력 옆 `Validate` 버튼은 URL 형식(http/https, 호스트명)을 검사하고 favicon 미리보기와 열기 링크를 갱신합니다.
 - Manifest key 입력 옆 `키 생성`(New key) 버튼은 서버에서 RSA-2048 공개키를 새로 만들어 입력란을 채우고, 그 key로 고정될 확장 ID를 보여줍니다.
 - Manifest key 입력 옆 `ID` 버튼은 key가 실제 base64 공개키(SPKI)인지 검사하고, 그 key로 고정될 Chrome 확장 ID(32자 a–p 문자열)를 계산해 보여줍니다. 32자 확장 ID를 key 자리에 넣으면 오류로 안내합니다.
-- `Save & Generate`는 실행 전에 덮어쓰기(및 prune 시 삭제) 내용을 알리는 확인 창을 띄웁니다.
+- 상단의 `키 상태 다시 검사` 버튼은 활성 숏컷 범위의 key를 감사(audit)해 누락/형식오류/중복 확장 ID를 표시합니다.
+- `문제 키 자동복구` 버튼은 누락 key, 잘못된 key, 중복 확장 ID key를 새 RSA-2048 key로 교체하고 즉시 `config/extensions.json`에 저장한 뒤, 확장 패키지 재생성까지 연속으로 실행합니다.
+- `Save & Generate`는 실행 전에 덮어쓰기(및 prune 시 삭제) 내용을 페이지 안의 확인 창으로 다시 한 번 보여 줍니다. 브라우저의 네이티브 JS 대화상자 차단 정책에 덜 영향을 받습니다.
 
 ### JSON 내보내기 / 가져오기
 
@@ -48,6 +50,15 @@ node scripts\manager.js
 **주의: 확장 ID(32자 a–p 문자열)는 key가 아닙니다.** key는 base64로 인코딩된 RSA 공개키(SPKI DER, 보통 `MIIB…`로 시작하는 긴 문자열)이며, 확장 ID는 그 key의 SHA-256 해시에서 파생되는 결과값입니다. key 자리에 확장 ID를 넣으면 Chrome이 manifest 로드에 실패하고, **로드에 실패한 압축해제 확장은 브라우저 재시작 시 목록에서 제거됩니다.**
 
 key를 얻는 방법: 매니저의 `키 생성` 버튼을 누르면 서버가 새 RSA 키를 만들어 채워 줍니다. 또는 확장을 한 번 `.crx`로 패키징하거나 Chrome 웹 스토어 개발자 대시보드에서 확인한 공개키를 붙여넣어도 됩니다.
+
+매니저 서버는 key를 저장할 때 아래를 강제합니다.
+
+- 공백 제거 후 canonical base64 형식
+- DER(SPKI) 공개키 파싱 가능
+- RSA 공개키
+- RSA 2048비트 이상
+
+또한 key 감사(audit)는 유효 key라도 같은 확장 ID를 만들면 중복 충돌로 표시합니다.
 
 ### 테마와 언어
 
@@ -76,6 +87,8 @@ src/manager/
 | PUT | `/api/config` | `count`, `shortcuts` 갱신 (검증 후 `config/extensions.json`에 저장) |
 | POST | `/api/generate` | 설정 기준으로 재생성. body `{"prune": true}`로 정리 가능 |
 | POST | `/api/keygen` | 새 RSA-2048 manifest key와 그로부터 파생되는 확장 ID 반환 |
+| GET | `/api/key-audit` | key 감사 결과(요약 + 항목별 상태) 반환 |
+| POST | `/api/key-autofix` | key 문제 자동복구 후 저장. body 생략 시 활성 범위 기준 |
 
 `PUT /api/config`의 `shortcuts`는 전체 교체(replace) 방식입니다. UI는 항상 기존 항목을 병합해 전체를 전송합니다.
 

@@ -25,6 +25,8 @@ const mimeTypes = {
 };
 
 const urlPattern = /^https?:\/\//i;
+const extensionIdPattern = /^[a-p]{32}$/;
+const strictBase64Pattern = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
@@ -62,26 +64,58 @@ function extensionIdFromKey(spkiDer) {
     .replace(/./g, (hex) => "abcdefghijklmnop"[parseInt(hex, 16)]);
 }
 
-function assertValidManifestKey(key, context) {
-  // Chrome manifest key는 base64로 인코딩된 DER(SPKI) 공개키여야 한다.
-  // 32자리 확장 ID(a-p 문자열)도 base64 문자 집합에 걸리므로 실제 디코딩까지 검증한다.
-  if (!/^[A-Za-z0-9+/=]+$/.test(key)) {
-    throw new Error(`${context}: key must be a base64 manifest key.`);
+function normalizeManifestKeyInput(key) {
+  return typeof key === "string" ? key.trim().replace(/\s+/g, "") : "";
+}
+
+function parseManifestKey(key, context) {
+  const normalizedKey = normalizeManifestKeyInput(key);
+
+  if (!normalizedKey) {
+    throw new Error(`${context}: key is empty.`);
   }
 
-  let spkiDer;
-
-  try {
-    spkiDer = Buffer.from(key, "base64");
-    crypto.createPublicKey({ key: spkiDer, format: "der", type: "spki" });
-  } catch (error) {
+  if (extensionIdPattern.test(normalizedKey)) {
     throw new Error(
-      `${context}: key is not a valid base64 public key (SPKI). ` +
-        "Note: a 32-character extension ID is not a manifest key."
+      `${context}: looks like a 32-character extension ID. ` +
+        "Manifest key must be a base64 public key (SPKI)."
     );
   }
 
-  return spkiDer;
+  if (!strictBase64Pattern.test(normalizedKey)) {
+    throw new Error(`${context}: key must be canonical base64.`);
+  }
+
+  let spkiDer;
+  let keyObject;
+
+  try {
+    spkiDer = Buffer.from(normalizedKey, "base64");
+    keyObject = crypto.createPublicKey({ key: spkiDer, format: "der", type: "spki" });
+  } catch (error) {
+    throw new Error(`${context}: key is not a valid DER(SPKI) public key.`);
+  }
+
+  if (keyObject.asymmetricKeyType !== "rsa") {
+    throw new Error(`${context}: key must be RSA public key (SPKI).`);
+  }
+
+  const modulusLength = keyObject.asymmetricKeyDetails?.modulusLength ?? null;
+
+  if (modulusLength !== null && modulusLength < 2048) {
+    throw new Error(`${context}: RSA key length must be at least 2048 bits.`);
+  }
+
+  return {
+    spkiDer,
+    normalizedKey: spkiDer.toString("base64"),
+    id: extensionIdFromKey(spkiDer),
+    modulusLength
+  };
+}
+
+function assertValidManifestKey(key, context) {
+  return parseManifestKey(key, context);
 }
 
 function generateManifestKey() {
@@ -108,20 +142,191 @@ function validateShortcuts(shortcuts) {
 
     const label = typeof entry?.label === "string" ? entry.label.trim() : "";
     const url = typeof entry?.url === "string" ? entry.url.trim() : "";
-    const key = typeof entry?.key === "string" ? entry.key.trim() : "";
+    const key = typeof entry?.key === "string" ? normalizeManifestKeyInput(entry.key) : "";
 
     if (url && !urlPattern.test(url)) {
       throw new Error(`Shortcut ${digit}: URL must start with http:// or https://`);
     }
 
     if (key) {
-      assertValidManifestKey(key, `Shortcut ${digit}`);
+      const parsed = assertValidManifestKey(key, `Shortcut ${digit}`);
+      sanitized[digit] = { label, url, key: parsed.normalizedKey };
+      continue;
     }
 
     sanitized[digit] = { label, url, key };
   }
 
   return sanitized;
+}
+
+function getActiveDigits(config) {
+  const digits = [];
+
+  for (let offset = 0; offset < config.count; offset += 1) {
+    digits.push(config.start + offset);
+  }
+
+  return digits;
+}
+
+function getManagedDigits(config, scope = "active") {
+  if (scope === "all") {
+    const all = new Set(getActiveDigits(config));
+
+    for (const digit of Object.keys(config.shortcuts || {})) {
+      if (/^\d+$/.test(digit)) {
+        all.add(Number(digit));
+      }
+    }
+
+    return [...all].sort((a, b) => a - b);
+  }
+
+  return getActiveDigits(config);
+}
+
+function buildKeyAudit(config, options = {}) {
+  const scope = options.scope === "all" ? "all" : "active";
+  const digits = getManagedDigits(config, scope);
+  const items = [];
+  const idToIndexes = new Map();
+
+  for (const digit of digits) {
+    const digitKey = String(digit);
+    const entry = config.shortcuts?.[digitKey] || {};
+    const key = normalizeManifestKeyInput(entry.key || "");
+    const item = {
+      digit: digitKey,
+      paddedDigit: digitKey.padStart(2, "0"),
+      label: typeof entry.label === "string" ? entry.label : "",
+      hasKey: Boolean(key),
+      isValid: false,
+      issueCode: "MISSING_KEY",
+      issue: "Missing manifest key.",
+      extensionId: "",
+      duplicateWith: []
+    };
+
+    if (!key) {
+      items.push(item);
+      continue;
+    }
+
+    try {
+      const parsed = parseManifestKey(key, `Shortcut ${digit}`);
+      item.isValid = true;
+      item.issueCode = "OK";
+      item.issue = "OK";
+      item.extensionId = parsed.id;
+      item.key = parsed.normalizedKey;
+
+      if (!idToIndexes.has(parsed.id)) {
+        idToIndexes.set(parsed.id, []);
+      }
+
+      idToIndexes.get(parsed.id).push(items.length);
+    } catch (error) {
+      item.issueCode = "INVALID_KEY";
+      item.issue = error.message;
+    }
+
+    items.push(item);
+  }
+
+  for (const indexes of idToIndexes.values()) {
+    if (indexes.length < 2) {
+      continue;
+    }
+
+    const duplicateDigits = indexes.map((index) => items[index].digit);
+
+    for (const index of indexes) {
+      const item = items[index];
+      item.isValid = false;
+      item.issueCode = "DUPLICATE_ID";
+      item.duplicateWith = duplicateDigits.filter((digit) => digit !== item.digit);
+      item.issue = `Duplicate extension ID with shortcut(s): ${item.duplicateWith.join(", ")}.`;
+    }
+  }
+
+  const summary = {
+    scope,
+    checked: items.length,
+    ok: items.filter((item) => item.issueCode === "OK").length,
+    missing: items.filter((item) => item.issueCode === "MISSING_KEY").length,
+    invalid: items.filter((item) => item.issueCode === "INVALID_KEY").length,
+    duplicate: items.filter((item) => item.issueCode === "DUPLICATE_ID").length
+  };
+
+  summary.actionNeeded = summary.missing + summary.invalid + summary.duplicate;
+
+  return { summary, items };
+}
+
+function autoFixManifestKeys(config, options = {}) {
+  const scope = options.scope === "all" ? "all" : "active";
+  const digits = getManagedDigits(config, scope);
+  const shortcuts = { ...(config.shortcuts || {}) };
+  const usedIds = new Set();
+  const updated = [];
+
+  for (const digit of digits) {
+    const digitKey = String(digit);
+    const original = shortcuts[digitKey] || {};
+    const label = typeof original.label === "string" ? original.label.trim() : "";
+    const url = typeof original.url === "string" ? original.url.trim() : "";
+    const normalizedKey = normalizeManifestKeyInput(original.key || "");
+
+    let replacementReason = "";
+    let parsed = null;
+
+    if (!normalizedKey) {
+      replacementReason = "missing_key";
+    } else {
+      try {
+        parsed = parseManifestKey(normalizedKey, `Shortcut ${digit}`);
+      } catch (error) {
+        replacementReason = "invalid_key";
+      }
+    }
+
+    if (!replacementReason && parsed && usedIds.has(parsed.id)) {
+      replacementReason = "duplicate_id";
+    }
+
+    if (!replacementReason && parsed) {
+      shortcuts[digitKey] = { label, url, key: parsed.normalizedKey };
+      usedIds.add(parsed.id);
+
+      if (parsed.normalizedKey !== normalizedKey) {
+        updated.push({ digit: digitKey, id: parsed.id, reason: "normalized_key" });
+      }
+
+      continue;
+    }
+
+    let generated;
+
+    do {
+      generated = generateManifestKey();
+    } while (usedIds.has(generated.id));
+
+    shortcuts[digitKey] = { label, url, key: generated.key };
+    usedIds.add(generated.id);
+    updated.push({ digit: digitKey, id: generated.id, reason: replacementReason || "replaced" });
+  }
+
+  const nextConfig = {
+    ...config,
+    shortcuts
+  };
+
+  return {
+    config: nextConfig,
+    updated,
+    audit: buildKeyAudit(nextConfig, { scope })
+  };
 }
 
 function applyConfigUpdate(update) {
@@ -186,6 +391,23 @@ async function handleApi(request, response, pathname) {
     const body = JSON.parse((await readBody(request)) || "{}");
     const result = generateExtensions({ prune: body.prune === true });
     sendJson(response, 200, result);
+    return;
+  }
+
+  if (pathname === "/api/key-audit" && request.method === "GET") {
+    sendJson(response, 200, { audit: buildKeyAudit(readConfig(), { scope: "active" }) });
+    return;
+  }
+
+  if (pathname === "/api/key-autofix" && request.method === "POST") {
+    const body = JSON.parse((await readBody(request)) || "{}");
+    const fixed = autoFixManifestKeys(readConfig(), { scope: body.scope === "all" ? "all" : "active" });
+    writeConfig(fixed.config);
+    sendJson(response, 200, {
+      config: fixed.config,
+      updated: fixed.updated,
+      audit: fixed.audit
+    });
     return;
   }
 
