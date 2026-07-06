@@ -1,5 +1,5 @@
 {
-  "count": 1,
+  "count": 9,
   "start": 1,
   "directoryTemplate": "shortcut-{digit}",
   "nameTemplate": "Omni-Shortcut {digit}",
@@ -9,54 +9,49 @@
   "optionHeadingTemplate": "Omni-Shortcut {digit} Options",
   "shortcuts": {
     "1": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "구글",
+      "url": "https://google.com",
+      "key": "adgfoofojnomdgjipfgcjfpinblpojll"
     },
     "2": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "네이버",
+      "url": "https://naver.com",
+      "key": "pppipdapbnelhejnheiiopnjcnmlkapo"
     },
     "3": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "유튜브",
+      "url": "https://youtube.com",
+      "key": "gllleabkfnnlbegipbkfnmahfapaenpc"
     },
     "4": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "X",
+      "url": "https://x.com",
+      "key": "pimdeecdhdeonkgbailhgfiplhnmpgpo"
     },
     "5": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "ChatGPT",
+      "url": "https://chatgpt.com",
+      "key": "okhbkohlefgfffbjaanbmhlplpckmiem"
     },
     "6": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "Claude",
+      "url": "https://claude.ai",
+      "key": "jldfhohdhhghimimjmanmjilplhgfang"
     },
     "7": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "Gemini",
+      "url": "https://gemini.google.com",
+      "key": "dielofpmdhigjgicjjeapajefnpcabgk"
     },
     "8": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "DeepL",
+      "url": "https://www.deepl.com/en/translator",
+      "key": "oeebilphalanpminhdbcpjmokahnonpp"
     },
     "9": {
-      "label": "",
-      "url": "",
-      "key": ""
-    },
-    "10": {
-      "label": "",
-      "url": "",
-      "key": ""
+      "label": "iCloud",
+      "url": "https://www.icloud.com",
+      "key": "mdighgdefomkfimlbmkjpiajpfboigml"
     }
   }
 }

@@ -1,5 +1,5 @@
 // Injected by scripts/generate-extensions.js from config/extensions.json shortcuts[digit].url
-const DEFAULT_TARGET_URL = "";
+const DEFAULT_TARGET_URL = "https://claude.ai";
 
 class StorageManager {
   static async getTargetUrl() {
