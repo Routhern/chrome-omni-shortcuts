@@ -179,6 +179,24 @@ class ManagerApp {
       keyFeedback.classList.toggle("is-error", !result.ok);
     });
 
+    row.querySelector(".generate-key").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/keygen", { method: "POST" });
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error || response.statusText);
+        }
+
+        keyInput.value = payload.key;
+        keyFeedback.textContent = this.i18n.t("validate.keyOk", { id: payload.id });
+        keyFeedback.classList.remove("is-error");
+      } catch (error) {
+        keyFeedback.textContent = this.i18n.t("status.error", { message: error.message });
+        keyFeedback.classList.add("is-error");
+      }
+    });
+
     applyUrlPreview(entry.url);
     return row;
   }
@@ -210,6 +228,10 @@ class ManagerApp {
       return { ok: false, message: this.i18n.t("validate.keyEmpty") };
     }
 
+    if (/^[a-p]{32}$/.test(key)) {
+      return { ok: false, message: this.i18n.t("validate.keyIsExtensionId") };
+    }
+
     if (!/^[A-Za-z0-9+/=]+$/.test(key)) {
       return { ok: false, message: this.i18n.t("validate.keyInvalid") };
     }
@@ -217,6 +239,16 @@ class ManagerApp {
     try {
       const raw = atob(key);
       const bytes = Uint8Array.from(raw, (character) => character.charCodeAt(0));
+
+      // 확장 ID 등 임의의 base64 문자열을 걸러내기 위해 실제 SPKI 공개키인지 확인한다.
+      await crypto.subtle.importKey(
+        "spki",
+        bytes,
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        true,
+        ["verify"]
+      );
+
       const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
       const extensionId = [...hash.slice(0, 16)]
         .map((byte) => byte.toString(16).padStart(2, "0"))

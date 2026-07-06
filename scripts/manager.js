@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
@@ -52,6 +53,47 @@ function readBody(request) {
   });
 }
 
+function extensionIdFromKey(spkiDer) {
+  const hash = crypto.createHash("sha256").update(spkiDer).digest();
+
+  return [...hash.subarray(0, 16)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .replace(/./g, (hex) => "abcdefghijklmnop"[parseInt(hex, 16)]);
+}
+
+function assertValidManifestKey(key, context) {
+  // Chrome manifest key는 base64로 인코딩된 DER(SPKI) 공개키여야 한다.
+  // 32자리 확장 ID(a-p 문자열)도 base64 문자 집합에 걸리므로 실제 디코딩까지 검증한다.
+  if (!/^[A-Za-z0-9+/=]+$/.test(key)) {
+    throw new Error(`${context}: key must be a base64 manifest key.`);
+  }
+
+  let spkiDer;
+
+  try {
+    spkiDer = Buffer.from(key, "base64");
+    crypto.createPublicKey({ key: spkiDer, format: "der", type: "spki" });
+  } catch (error) {
+    throw new Error(
+      `${context}: key is not a valid base64 public key (SPKI). ` +
+        "Note: a 32-character extension ID is not a manifest key."
+    );
+  }
+
+  return spkiDer;
+}
+
+function generateManifestKey() {
+  const { publicKey } = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const spkiDer = publicKey.export({ type: "spki", format: "der" });
+
+  return {
+    key: spkiDer.toString("base64"),
+    id: extensionIdFromKey(spkiDer)
+  };
+}
+
 function validateShortcuts(shortcuts) {
   if (typeof shortcuts !== "object" || shortcuts === null || Array.isArray(shortcuts)) {
     throw new Error("shortcuts must be an object keyed by digit.");
@@ -72,8 +114,8 @@ function validateShortcuts(shortcuts) {
       throw new Error(`Shortcut ${digit}: URL must start with http:// or https://`);
     }
 
-    if (key && !/^[A-Za-z0-9+/=]+$/.test(key)) {
-      throw new Error(`Shortcut ${digit}: key must be a base64 manifest key.`);
+    if (key) {
+      assertValidManifestKey(key, `Shortcut ${digit}`);
     }
 
     sanitized[digit] = { label, url, key };
@@ -99,7 +141,6 @@ function applyConfigUpdate(update) {
     config.shortcuts = validateShortcuts(update.shortcuts);
   }
 
-  delete config.manifestKeys;
   writeConfig(config);
   return config;
 }
@@ -145,6 +186,11 @@ async function handleApi(request, response, pathname) {
     const body = JSON.parse((await readBody(request)) || "{}");
     const result = generateExtensions({ prune: body.prune === true });
     sendJson(response, 200, result);
+    return;
+  }
+
+  if (pathname === "/api/keygen" && request.method === "POST") {
+    sendJson(response, 200, generateManifestKey());
     return;
   }
 

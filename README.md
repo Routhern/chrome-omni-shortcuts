@@ -79,7 +79,7 @@ node scripts\manager.js
 - 설정 전체를 JSON 파일로 내보내기/가져오기 (백업, 기기 간 이전)
 - 라이트/다크 테마 전환, 영어/한국어 UI 전환
 
-manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS에서 같은 확장으로 인식되고, `chrome.storage.sync` 데이터가 기기 간에 연동됩니다. 매니저에 저장한 URL은 생성된 패키지에 기본 대상 URL로 주입됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
+manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS에서 같은 확장으로 인식되고, `chrome.storage.sync` 데이터가 기기 간에 연동됩니다. key는 base64 공개키여야 하며(32자 확장 ID가 아님), 매니저의 `키 생성` 버튼으로 만들 수 있습니다. 잘못된 key가 들어가면 Chrome 재시작 시 확장이 로드에 실패해 목록에서 사라지므로 주의하세요. 매니저에 저장한 URL은 생성된 패키지에 기본 대상 URL로 주입됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
 
 ## 권한 안내
 

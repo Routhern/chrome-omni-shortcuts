@@ -5,53 +5,51 @@
   "nameTemplate": "Omni-Shortcut {digit}",
   "descriptionTemplate": "Target URL access via shortcut {digit}",
   "actionTitleTemplate": "Target URL access via shortcut {digit}",
-  "optionPageTitleTemplate": "Omni-Shortcut {digit}",
-  "optionHeadingTemplate": "Omni-Shortcut {digit} Options",
   "shortcuts": {
     "1": {
       "label": "구글",
       "url": "https://google.com",
-      "key": "adgfoofojnomdgjipfgcjfpinblpojll"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz407Krrvv8aLc3QBEwrv/tLXNexI3eZYjnwcDyJPKFhn6+VaIUgT0IDCY8HkC56sijeo14Lsj6BCijsq/zbbGu98ma2uJwSkPFMp+TLxvB0l39r54Mv+Aha5SbVKbhYByIx7X8xkYc05feZOg9rC/fQdTseYvqBCtdbtOKM0ZxKdHHwIq2tUFemtuqdkqSQFfLqlDyvU6l0/slQ7cY/reylTXNNBlGCyvqLucOwlWTR/mvyMP6j9E9cnFrk6nBn9GuCURLeboAr7RIeyK7YINadhKHY+b4J6URvO7mzdY706lmAcB0a6i5nLik6GLDxrcJn7QdUpDbLNvNvriH6sXwIDAQAB"
     },
     "2": {
       "label": "네이버",
       "url": "https://naver.com",
-      "key": "pppipdapbnelhejnheiiopnjcnmlkapo"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbl4IxWbs8Y25Ja5apBXcZdDwhQpX2W1/dmGJxaqP3zkCGle8oE0H00HHjeT8CZObT55o17A0Xj7O8bLxmjSN2sDL4B0howgda8kWdXAQ4Jctfypt0lyEKVzyLJ4qSH+1Apa2qSHmfFuYB7GzW49VJHa4/IPXEBW7zuN6r6Xu/FV6/5H8GYGcB/BAqJW5EhWqsw2gUj7ymKNMSlMDBRONESqCng0AN4p6BY3e7TlYqja3ZvNMfW5YLp0V9N2Q+wjNPHY63vBQQ5x4jSzZeYe73oQMLFW9jtCEBosA/V7BeEVK8uxDDCTOfu6R+/ICUnoEe0PQDZ7UbFJHAmB2S/ubQIDAQAB"
     },
     "3": {
       "label": "유튜브",
       "url": "https://youtube.com",
-      "key": "gllleabkfnnlbegipbkfnmahfapaenpc"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAocGaMnfYk+1qmW2P7JbHiKCGz35ehZmBaQ3o9MRJ4bGJ/zghhFqe45KMVlR37EQwag7ejgeTTY2M9HzFImSvl8FtuNsb4hPCyI1+zTCaFaL0GxtEa22lDz6Zs84pyxC/DDw9ReUavx8sx80Ip0LsNIaJCWGR/bsQz3S/e1tAxbsrlhgO9rIUV2VnwUBmOLQUoBR9mT+6KxBNehp6dGV33gpYd0qrICXyTClBf5V49pdyGExTzqtjgYU3gZjqFdfDdMsn8PhzBuw1QJ7T0DMtZIGyFQ6MzhgjPNpm0mIwe7A8knOL+6yIiElAYVap3oUFWj5PG3q69a4s9WdPARgJdwIDAQAB"
     },
     "4": {
       "label": "X",
       "url": "https://x.com",
-      "key": "pimdeecdhdeonkgbailhgfiplhnmpgpo"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7/ywILT4JpmnyLo9nworZ/rnCH/+pp0rK4HC/0pUSQvAo+a0pl5wmMKm/MFZhNsjwhH0CP4/KRvApChgVlxaO4Vv5tY6+x21n1Roie+Plav3c2DdrEp7gf9PJNERDdDOuufvXmeFCKbErzS0LOlDjnOwzeYh71UAOyqD/aCgqBmr4n4GhYJM8xSAv1FEQwkyqO0bPprwPGaiXqvmLWHOrYAwIlmqTbbY6NcvBuVw4UJ6ItKVuiiyo4T/IHjMU07k5x7DPcARNNa9zbrKjdN8Sm6YzgnUi8bog2ErwjrUXxar2tIBWwEDNlM72MaQLYah0uPcpn+EGZYQZEsU8bg8BwIDAQAB"
     },
     "5": {
       "label": "ChatGPT",
       "url": "https://chatgpt.com",
-      "key": "okhbkohlefgfffbjaanbmhlplpckmiem"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkP8oZ1Ine0hfKBrnXssqP8KRbCBYDEO+Aaf0ajcND+vgZwIJKZpqNynxAmqIMoA+KY/sv7qrV9FRj8Din6HzgMQuZs2nIse6xY4ALMe3/OnrlqRvb3LfXeXKBzivhRTgwGfg93ZmRr6I9VKWWGobFYoPSB9AF6+zSkMjKPDxZlKSz9jkDfkTIhtsg00PX0rafzMiLt+6NCFFU+xV/PFjl8x7ape94xaoE5dBx7EobOXM+tRl+KVdwwxUwr9k9Mtjao4CyQuenzrkqKm1Jpd5NBejosvnwC90AcObdJFsX+/R90grcmpaGhRWC3aFpNCTg59M9fbSC0/B5rVqhhlVcwIDAQAB"
     },
     "6": {
       "label": "Claude",
       "url": "https://claude.ai",
-      "key": "jldfhohdhhghimimjmanmjilplhgfang"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzSZa9GSMsQserA9cMRRtAj9IDMf310Ghic3n6IlvCyHh3V1z/SoBChJlKx3ifNdKOOweUDTfTcU4zrhoQCstmXlZuwQDdGQVWizSzJmFrXL6T/zhTGctw8VkKZTEcCAYGSG2vviTkGAPGl84Us5b+odQPkER41R8/PD71DQf+2+ERe6vztwIZDSiS6leB/Qmjp4CVcbwYNTDSyUtSPoE5dE4v5DsQdrfK1bgTw+07eEOQcZVwYP2Wy9YAHl0wXPQIvRlEtSHnZS+SheW/gjbyS6jPLdT8tSPxkG3/BTPoc5tWdplCK1DfFoS1ftOJN+/kQ6czWJiMQfngGKLU1Ij4QIDAQAB"
     },
     "7": {
       "label": "Gemini",
       "url": "https://gemini.google.com",
-      "key": "dielofpmdhigjgicjjeapajefnpcabgk"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsVzXWJgZiK/AwWzs05QSg4cE0HWGAOXoyG8UdYICeffeT0Fppb+DRXrp4tIYTqfMLg4XumagzFmjFh1hODlO0rc9KNaZxwoEzcen2f2OwAHitsGY0xrDjesTy0jKvtxZGcExLI/zDL3LM1PoB6BSmsnXfSf0wvhcYv/lqoo5MKb5Tro/eVph5sDprLcIcWc7ZQqjq52ukNTY6dNbMhin3t1mCDuyMAa5cThBbkRxl5pTrKc1Lj3hdvzOWJukdRDRERqLJ+QS/0Xws80lEubQbwdO2Yde4Wj+m4Yf6wUeQFXdl76klf5XK/M108EBdcQ0p5wvuYrRDMIEK0LOjwNdLwIDAQAB"
     },
     "8": {
       "label": "DeepL",
       "url": "https://www.deepl.com/en/translator",
-      "key": "oeebilphalanpminhdbcpjmokahnonpp"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvPXkEumyKyjJv8gjWZ6QvaOgiB9Azqrjv317rf8UboQ9TCD3rHiT+WrYDMvTsY69c9epki/Gf0jovdnVFkmTebMYc2Frzw80V+SSOrf5AuoviwkJ7QUx9o95+/1a25k+lzzvZGz1K1hiSCEM2w0Irx8GvajTWJ1dv9Xd7tMPQffK2sjHyberbMtxzdsih6r5MOoVHnlFxvqhgw7BOKqdpYl3jLtXWJWy1RDSxQHSgGKfNUOaO43lCwQ4hrO9QUvlB3JaShtxCSPMq2SL+5n+gtDJMw2tKP2oq5PQhvNwpZjvD3lBTyJMejAJz21qq5dsYIn1d2/yH67sUYC3pcYfswIDAQAB"
     },
     "9": {
       "label": "iCloud",
       "url": "https://www.icloud.com",
-      "key": "mdighgdefomkfimlbmkjpiajpfboigml"
+      "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2Z6p80Qre3GtkHf3wg00PvaztdykGFU4YK6ZilGPHmQ2Z1gDPyCCA+ZI54TJcQq9G4BmZvh71CqzSvhDGF4LJPAWWdwJTTxP1DuNjcAcCT2IJ5wdjjO4SWWGUiU+gv0kBRyyYDeBF/aO+QaYAMeSVDw+6AilSSliWr4P7u5Iw/F0MXetZcNnpJbV6ssHPLN8fe5BR+ne/RD/aj++85R+af+5NgOdFZ31y9iU36MW6uGYwn8sSAS1rbs30TX8izAL8MIAAeHykLnSQn6JsifJ/pqWQtUiQ4sWG5AjTDQAnQPfusgnljo9aSg1SigGLuKdEFX2iOI1XMIr+sjkiD2VhQIDAQAB"
     }
   }
 }

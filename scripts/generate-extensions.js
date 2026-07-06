@@ -96,10 +96,8 @@ function getShortcutValues(config, digit) {
     name: formatTemplate(config.nameTemplate, values),
     description: formatTemplate(config.descriptionTemplate, values),
     actionTitle: formatTemplate(config.actionTitleTemplate, values),
-    optionPageTitle: formatTemplate(config.optionPageTitleTemplate, values),
-    optionHeading: formatTemplate(config.optionHeadingTemplate, values),
     defaultUrl: entry.url,
-    manifestKey: entry.key || config.manifestKeys?.[String(digit)] || ""
+    manifestKey: entry.key
   };
 }
 
@@ -113,8 +111,6 @@ function replacePlaceholders(content, shortcut) {
     .replaceAll("__SHORTCUT_NAME__", shortcut.name)
     .replaceAll("__SHORTCUT_DESCRIPTION__", shortcut.description)
     .replaceAll("__SHORTCUT_ACTION_TITLE__", shortcut.actionTitle)
-    .replaceAll("__SHORTCUT_OPTION_PAGE_TITLE__", shortcut.optionPageTitle)
-    .replaceAll("__SHORTCUT_OPTION_HEADING__", shortcut.optionHeading)
     .replaceAll("__SHORTCUT_DEFAULT_URL__", escapeForJsString(shortcut.defaultUrl));
 }
 

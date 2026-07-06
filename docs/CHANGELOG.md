@@ -25,6 +25,11 @@
 - 숏컷 목록에 URL `Validate` 버튼과 manifest key `ID`(확장 ID 계산) 버튼 추가
 - 재생성 전 덮어쓰기·삭제 내용을 알리는 확인 창 추가
 - README에 수동 확장 로드·핀 고정 가이드 추가
+- 매니저에 manifest key 생성 버튼과 `POST /api/keygen` API 추가 (RSA-2048 공개키 + 확장 ID 반환)
+
+### Fixed
+
+- manifest `key`에 base64 공개키 대신 32자 확장 ID가 저장되던 문제 수정. 잘못된 key가 주입된 확장은 Chrome 재시작 시 로드에 실패해 목록에서 사라졌음. 서버·클라이언트 key 검증을 base64 문자 검사에서 실제 SPKI 공개키 파싱 검증으로 강화하고, `config/extensions.json`의 기존 잘못된 key 9개를 유효한 키로 교체
 
 ### Changed
 
@@ -34,7 +39,7 @@
 - 모든 사이트 접근 권한을 제거하고 favicon 조회 host permission을 `https://t0.gstatic.com/*`로 축소
 - 사용하지 않는 `activeTab` 권한 제거
 - 공통 확장 코드를 `src/extension-template/`에서 관리하도록 구조화
-- `config/extensions.json`의 `manifestKeys`를 `shortcuts[digit].key`로 통합 (기존 키는 fallback으로 계속 인식)
+- `config/extensions.json`의 `manifestKeys`를 `shortcuts[digit].key`로 통합
 - `scripts/generate-extensions.js`를 모듈로 분리해 매니저 서버에서 재사용 가능하도록 변경
 - favicon 조회와 아이콘 설정을 배경 서비스 워커로 이동해 확장이 로드 시 자동으로 아이콘을 설정하도록 변경
 - 아이콘 캐시를 `chrome.storage.sync`에서 `chrome.storage.local`로 이동 (URL은 패키지에 주입되므로 동기화 불필요)
@@ -47,6 +52,8 @@
 ### Removed
 
 - 레거시 확장별 옵션 페이지(`option.html`/`option.css`/`option.js`) 제거. URL 설정은 숏컷 매니저에서 중앙 관리
+- 구버전 `manifestKeys` 최상위 필드의 fallback 인식 제거 (`shortcuts[digit].key`만 사용)
+- 제거된 옵션 페이지용 레거시 규격 삭제: config의 `optionPageTitleTemplate`/`optionHeadingTemplate` 필드와 생성기의 `__SHORTCUT_OPTION_PAGE_TITLE__`/`__SHORTCUT_OPTION_HEADING__` 플레이스홀더
 
 ## [1.0.0] - 2025-01-24
 

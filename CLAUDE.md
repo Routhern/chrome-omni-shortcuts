@@ -32,7 +32,7 @@ node scripts\manager.js
 2. 번호별 문구·개수는 `config/extensions.json`의 템플릿(`{digit}` 토큰), 숏컷별 URL·manifest key는 같은 파일의 `shortcuts` 맵 수정
 3. `node scripts\generate-extensions.js` 실행으로 `extensions/shortcut-NN` 재생성 (두 자리 번호)
 
-`config/extensions.json`의 `shortcuts[digit]`은 `{ label, url, key }` 구조입니다. `url`은 생성 시 `background.js`의 `DEFAULT_TARGET_URL`로 주입되고, `key`는 manifest의 `key` 필드가 되어 기기 간 확장 ID를 고정합니다. 생성 번호는 `start`부터 `count`개입니다. 구버전 `manifestKeys` 최상위 필드는 생성기에서 fallback으로만 읽히며, 매니저의 `PUT /api/config` 저장 시 제거됩니다.
+`config/extensions.json`의 `shortcuts[digit]`은 `{ label, url, key }` 구조입니다. `url`은 생성 시 `background.js`의 `DEFAULT_TARGET_URL`로 주입되고, `key`는 manifest의 `key` 필드가 되어 기기 간 확장 ID를 고정합니다. 생성 번호는 `start`부터 `count`개입니다. `key`는 base64 공개키(SPKI)여야 하며 32자 확장 ID가 아닙니다 — 매니저의 `키 생성` 버튼이나 `POST /api/keygen`으로 만듭니다.
 
 ### 숏컷 매니저 (scripts/manager.js + src/manager/)
 
