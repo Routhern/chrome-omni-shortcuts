@@ -10,7 +10,7 @@ chrome-omni-shortcuts는 자주 여는 웹사이트를 Chrome 툴바 버튼으�
 - 확장별 대상 URL 저장
 - 대상 사이트의 favicon을 가져와 확장 아이콘으로 사용
 - favicon을 찾지 못해도 사이트명 기반 기본 아이콘 자동 생성
-- Chrome 동기화 저장소를 통한 URL과 아이콘 저장
+- Chrome 재시작 직후에도 보이는 번호 기반 기본 PNG 아이콘 포함
 - 별도 빌드 없이 Chrome에서 바로 로드 가능
 
 ## 설치하기 — 확장 로드와 핀 고정 (수동, 최초 1회)
@@ -48,7 +48,7 @@ URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 �
 
 확장이 재시작 후 사라지는 문제가 있었다면, 매니저 상단의 `키 상태 다시 검사`로 key 충돌/오류를 확인하고 `문제 키 자동복구`를 실행하세요. 자동복구는 문제 key 교체와 확장 재생성까지 한 번에 수행합니다.
 
-확장이 로드되면 아이콘은 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
+확장이 로드되면 우선 번호가 들어간 기본 PNG 아이콘이 표시되고, 서비스 워커가 실행되면 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
 
 URL은 `http://` 또는 `https://` 주소만 저장할 수 있습니다.
 
@@ -78,6 +78,7 @@ node scripts\manager.js
 - 숏컷 패키지 개수 변경과 재생성 (prune 옵션 포함)
 - 숏컷별 이름·대상 URL·manifest key를 중앙 JSON(`config/extensions.json`)에서 편집
 - 저장된 URL 목록을 favicon과 함께 한눈에 탐색하고 바로 열기
+- Chrome 재시작 직후에도 보이는 기본 PNG 아이콘 자동 생성
 - 설정 전체를 JSON 파일로 내보내기/가져오기 (백업, 기기 간 이전)
 - 라이트/다크 테마 전환, 영어/한국어 UI 전환
 
@@ -89,7 +90,7 @@ manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS�
 
 이 확장은 다음 Chrome 권한을 사용합니다.
 
-- `storage`: 사용자가 저장한 URL과 아이콘 데이터를 보관합니다.
+- `storage`: favicon 픽셀 캐시와 레거시 옵션 페이지 URL fallback을 읽고 씁니다.
 - `tabs`: 현재 탭을 저장된 URL로 이동합니다.
 - `https://t0.gstatic.com/*` host permission: 저장한 URL의 favicon을 Google favicon endpoint에서 조회합니다.
 

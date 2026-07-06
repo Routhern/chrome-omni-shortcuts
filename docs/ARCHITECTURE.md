@@ -30,6 +30,8 @@ extensions/shortcut-N/
 
 - `background.service_worker`: `background.js`
 - `action.default_title`: 툴바 버튼 제목
+- `action.default_icon`: Chrome 시작 직후 표시할 번호 기반 PNG 아이콘
+- `icons`: 확장 관리 화면과 툴바 fallback용 PNG 아이콘
 - `permissions`: `storage`, `tabs`
 - `host_permissions`: `https://t0.gstatic.com/*`
 
@@ -50,12 +52,12 @@ extensions/shortcut-N/
 
 ## Favicon 정책
 
-아이콘 설정은 `background.js` 서비스 워커가 `onInstalled`/`onStartup` 시점에 수행합니다.
+각 패키지는 생성 시 `icons/icon-{size}.png` 기본 아이콘을 포함합니다. 이 아이콘은 Chrome 시작 직후와 확장 관리 화면에서 먼저 표시됩니다. 대상 사이트 favicon 설정은 `background.js` 서비스 워커가 `onInstalled`/`onStartup` 시점에 수행합니다.
 
-1. 대상 URL이 `http(s)`가 아니면 아무것도 하지 않습니다.
+1. 대상 URL이 `http(s)`가 아니면 manifest의 기본 PNG 아이콘을 그대로 둡니다.
 2. `chrome.storage.local`에 같은 URL로 캐시된 아이콘 픽셀이 있으면 그대로 복원합니다.
 3. 없으면 Google favicon endpoint에서 대상 URL의 32px favicon을 조회해 `OffscreenCanvas`에 그립니다.
-4. 조회 또는 이미지 검증이 실패하면 호스트명 첫 글자를 사용한 기본 아이콘을 생성합니다.
+4. 조회 또는 이미지 검증이 실패하면 호스트명 첫 글자를 사용한 런타임 기본 아이콘을 생성합니다.
 5. `chrome.action.setIcon()`으로 아이콘을 설정하고 픽셀 데이터를 `chrome.storage.local`에 캐시합니다.
 
 이 정책은 모든 사이트 접근 권한인 `<all_urls>` 없이 동작하도록 설계했습니다. 대상 사이트의 HTML을 직접 읽지 않기 때문에 다크/라이트 모드별 favicon 후보 추출은 지원하지 않습니다.
@@ -113,6 +115,8 @@ https://t0.gstatic.com/faviconV2
 - `manifest.json`
 
 확장 표시 이름, 설명, 툴바 제목, 생성 개수는 `config/extensions.json`에서 관리합니다. 확장 ID 고정용 manifest key도 이 설정 파일에서 번호별로 관리합니다.
+
+생성 스크립트는 각 패키지에 `icons/icon-16.png`, `icons/icon-24.png`, `icons/icon-32.png`, `icons/icon-48.png`, `icons/icon-128.png`도 함께 씁니다. 아이콘은 URL 또는 확장 이름에서 파생한 색상과 shortcut 번호로 구성됩니다.
 
 ## 향후 개선 후보
 

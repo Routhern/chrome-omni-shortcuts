@@ -21,6 +21,7 @@ scripts/
   generate-extensions.js
 extensions/
   shortcut-01/
+    icons/
   shortcut-02/
   ...
 ```
@@ -31,6 +32,7 @@ extensions/
 - `extensions/shortcut-*`: Chrome에 실제로 로드하거나 배포할 결과물입니다. **직접 수정하지 마세요** — 재생성 시 덮어써집니다.
 
 패키지 디렉터리와 표시 이름은 두 자리 번호를 사용합니다(`shortcut-01`, `Omni-Shortcut 01`).
+각 패키지는 `icons/icon-16.png`, `icons/icon-24.png`, `icons/icon-32.png`, `icons/icon-48.png`, `icons/icon-128.png`를 함께 포함합니다. 이 기본 PNG 아이콘은 Chrome 시작 직후와 확장 관리 화면에서 표시되고, 런타임에는 대상 사이트 favicon으로 교체될 수 있습니다.
 
 ## 생성하기
 

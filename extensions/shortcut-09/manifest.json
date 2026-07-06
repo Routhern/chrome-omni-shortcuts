@@ -10,11 +10,25 @@
   "host_permissions": [
     "https://t0.gstatic.com/*"
   ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "24": "icons/icon-24.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Target URL access via shortcut 09"
+    "default_title": "Target URL access via shortcut 09",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "24": "icons/icon-24.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2Z6p80Qre3GtkHf3wg00PvaztdykGFU4YK6ZilGPHmQ2Z1gDPyCCA+ZI54TJcQq9G4BmZvh71CqzSvhDGF4LJPAWWdwJTTxP1DuNjcAcCT2IJ5wdjjO4SWWGUiU+gv0kBRyyYDeBF/aO+QaYAMeSVDw+6AilSSliWr4P7u5Iw/F0MXetZcNnpJbV6ssHPLN8fe5BR+ne/RD/aj++85R+af+5NgOdFZ31y9iU36MW6uGYwn8sSAS1rbs30TX8izAL8MIAAeHykLnSQn6JsifJ/pqWQtUiQ4sWG5AjTDQAnQPfusgnljo9aSg1SigGLuKdEFX2iOI1XMIr+sjkiD2VhQIDAQAB"
 }
