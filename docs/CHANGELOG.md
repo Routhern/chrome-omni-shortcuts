@@ -29,6 +29,7 @@
 - Manifest key 감사/복구 기능 추가: `GET /api/key-audit`, `POST /api/key-autofix`, UI의 키 상태 패널/행별 경고/자동복구 버튼
 - UI 자동복구 버튼이 key 교체 후 확장 재생성까지 자동으로 이어지도록 개선
 - 각 숏컷 패키지에 Chrome 시작 직후 표시할 번호 기반 기본 PNG 아이콘 자동 생성 추가
+- 압축해제 확장이 Chrome 재시작 후 자동 복원되지 않는 프로필을 위한 `Open-Chrome-With-Shortcuts.bat` 런처 추가
 
 ### Fixed
 

@@ -13,15 +13,17 @@ chrome-omni-shortcuts는 자주 여는 웹사이트를 Chrome 툴바 버튼으�
 - Chrome 재시작 직후에도 보이는 번호 기반 기본 PNG 아이콘 포함
 - 별도 빌드 없이 Chrome에서 바로 로드 가능
 
-## 설치하기 — 확장 로드와 핀 고정 (수동, 최초 1회)
+## 설치하기 — 확장 로드와 핀 고정
 
 Chrome 보안 정책상 압축해제 확장의 설치와 툴바 핀 고정은 자동화할 수 없어 직접 해야 합니다. 다행히 **처음 한 번만 하면 됩니다.** manifest key로 확장 ID가 고정되어 있으면, 이후 매니저에서 URL을 바꾸고 재생성해도 Chrome은 같은 확장으로 인식하므로 다시 설치하거나 핀을 다시 박을 필요가 없습니다.
+
+일부 Chrome 프로필에서는 압축해제 확장이 재시작 후 자동 복원되지 않을 수 있습니다. 이 경우 Chrome을 완전히 종료한 뒤 저장소 루트의 `Open-Chrome-With-Shortcuts.bat`로 Chrome을 시작하세요. 이 런처는 `extensions/shortcut-*` 디렉터리를 `--load-extension` 옵션으로 명시해 Chrome 시작 시 다시 로드합니다.
 
 ### 1단계: 확장 로드
 
 1. 이 저장소를 내려받거나 압축 파일로 다운로드합니다.
 2. Chrome 주소창에 `chrome://extensions`를 입력해 확장 관리 페이지를 엽니다.
-3. 오른쪽 위의 **개발자 모드** 스위치를 켭니다.
+3. 오른쪽 위의 **개발자 모드** 스위치를 켭니다. 압축해제 확장은 이 스위치가 꺼져 있으면 로드되거나 복원되지 않을 수 있습니다.
 4. 왼쪽 위의 **압축해제된 확장 프로그램을 로드합니다** 버튼을 누릅니다.
 5. `extensions/shortcut-01` 폴더를 선택합니다.
 6. 필요한 만큼 `shortcut-02`, `shortcut-03` … 폴더를 같은 방식으로 반복해 추가합니다.
@@ -47,6 +49,8 @@ URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 �
 4. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
 
 확장이 재시작 후 사라지는 문제가 있었다면, 매니저 상단의 `키 상태 다시 검사`로 key 충돌/오류를 확인하고 `문제 키 자동복구`를 실행하세요. 자동복구는 문제 key 교체와 확장 재생성까지 한 번에 수행합니다.
+
+키가 정상인데도 Chrome을 껐다 켤 때 확장이 언로드된다면, `chrome://extensions`에서 개발자 모드가 켜져 있는지 먼저 확인하세요. 그래도 반복되면 Chrome을 완전히 종료한 뒤 `Open-Chrome-With-Shortcuts.bat`로 시작하세요. 이미 Chrome이 실행 중인 상태에서 런처를 실행하면 기존 Chrome 프로세스가 새 옵션을 무시할 수 있습니다.
 
 확장이 로드되면 우선 번호가 들어간 기본 PNG 아이콘이 표시되고, 서비스 워커가 실행되면 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
 
@@ -98,6 +102,7 @@ manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS�
 
 ```text
 chrome-omni-shortcuts/
+  Open-Chrome-With-Shortcuts.bat
   Open-Manager.bat
   open-manager.command
   extensions/
