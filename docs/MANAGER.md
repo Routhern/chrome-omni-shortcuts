@@ -1,4 +1,4 @@
-# Omni-Shortcut Manager
+# Chrome Omni-Shortcuts Manager
 
 이 문서는 브라우저 기반 GUI 숏컷 매니저의 구조와 사용법을 설명합니다.
 
@@ -30,7 +30,10 @@ node scripts\manager.js
 ```
 
 - `url`은 `http://` 또는 `https://`로 시작해야 하며, 생성 시 각 패키지의 `background.js`에 `DEFAULT_TARGET_URL`로 주입됩니다. 확장별 옵션 페이지는 제거되었으므로 매니저가 URL의 유일한 편집 지점입니다. URL 변경 후에는 재생성하고 Chrome에서 해당 확장을 새로고침해야 반영됩니다.
-- 매니저 목록에서 각 URL의 favicon 미리보기와 바로 열기 링크를 제공합니다.
+- 숏컷 목록은 테이블 형태이며 행마다 이름·URL·manifest key를 바로 편집합니다.
+- URL 입력 옆 `Validate` 버튼은 URL 형식(http/https, 호스트명)을 검사하고 favicon 미리보기와 열기 링크를 갱신합니다.
+- Manifest key 입력 옆 `ID` 버튼은 key의 base64 형식을 검사하고, 그 key로 고정될 Chrome 확장 ID(32자 a–p 문자열)를 계산해 보여줍니다.
+- `Save & Generate`는 실행 전에 덮어쓰기(및 prune 시 삭제) 내용을 알리는 확인 창을 띄웁니다.
 
 ### JSON 내보내기 / 가져오기
 

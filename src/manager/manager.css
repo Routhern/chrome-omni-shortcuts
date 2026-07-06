@@ -12,40 +12,116 @@ header.container nav button#theme-toggle {
   align-self: end;
 }
 
-.shortcut-row summary {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
+.table-wrap {
+  overflow-x: auto;
 }
 
-.shortcut-favicon {
-  flex-shrink: 0;
+#shortcut-table {
+  table-layout: fixed;
+  min-width: 56rem;
+}
+
+#shortcut-table .col-no {
+  width: 4.5rem;
+}
+
+#shortcut-table .col-label {
+  width: 11rem;
+}
+
+#shortcut-table .col-url {
+  width: 34%;
+}
+
+#shortcut-table .col-key {
+  width: 34%;
+}
+
+#shortcut-table .col-status {
+  width: 8.5rem;
+}
+
+#shortcut-table td {
+  vertical-align: top;
+}
+
+#shortcut-table input {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.cell-no {
+  white-space: nowrap;
+}
+
+.cell-no .shortcut-favicon {
   border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 0.35rem;
   visibility: hidden;
 }
 
-.shortcut-name {
+.cell-no .shortcut-digit {
   font-weight: 600;
-  white-space: nowrap;
 }
 
-.shortcut-url-preview {
+.input-group {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.input-group input {
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
   text-overflow: ellipsis;
+}
+
+.input-group button {
+  width: auto;
+  margin-bottom: 0;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8em;
   white-space: nowrap;
-  color: var(--pico-muted-color);
-  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+.shortcut-key {
+  font-family: var(--pico-font-family-monospace);
+  font-size: 0.8em;
+}
+
+.url-feedback,
+.key-feedback {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75em;
+  color: var(--pico-ins-color);
+  word-break: break-all;
+}
+
+.url-feedback:empty,
+.key-feedback:empty {
+  display: none;
+}
+
+.url-feedback.is-error,
+.key-feedback.is-error {
+  color: var(--pico-del-color);
+}
+
+.cell-status {
+  white-space: nowrap;
 }
 
 .shortcut-generated-badge {
-  flex-shrink: 0;
-  font-size: 0.75em;
+  display: inline-block;
+  font-size: 0.7em;
   padding: 0.1rem 0.5rem;
   border-radius: 1rem;
   background: var(--pico-muted-border-color);
   color: var(--pico-muted-color);
+  margin-right: 0.4rem;
 }
 
 .shortcut-generated-badge.is-generated {
@@ -53,15 +129,8 @@ header.container nav button#theme-toggle {
   color: var(--pico-contrast-inverse);
 }
 
-.shortcut-key {
-  font-family: var(--pico-font-family-monospace);
-  font-size: 0.8em;
-  word-break: break-all;
-}
-
-.shortcut-actions {
-  display: flex;
-  justify-content: flex-end;
+.shortcut-open {
+  font-size: 0.85em;
 }
 
 .shortcut-open.is-disabled {

@@ -142,15 +142,16 @@ class ManagerApp {
     row.dataset.digit = digit;
     const paddedDigit = digit.padStart(2, "0");
 
-    const name = row.querySelector(".shortcut-name");
-    const urlPreview = row.querySelector(".shortcut-url-preview");
     const badge = row.querySelector(".shortcut-generated-badge");
     const favicon = row.querySelector(".shortcut-favicon");
     const labelInput = row.querySelector(".shortcut-label");
     const urlInput = row.querySelector(".shortcut-url");
     const keyInput = row.querySelector(".shortcut-key");
     const openLink = row.querySelector(".shortcut-open");
+    const urlFeedback = row.querySelector(".url-feedback");
+    const keyFeedback = row.querySelector(".key-feedback");
 
+    row.querySelector(".shortcut-digit").textContent = paddedDigit;
     labelInput.value = entry.label;
     urlInput.value = entry.url;
     keyInput.value = entry.key;
@@ -159,19 +160,73 @@ class ManagerApp {
     badge.textContent = this.i18n.t(isGenerated ? "shortcuts.generated" : "shortcuts.notGenerated");
     badge.classList.toggle("is-generated", isGenerated);
 
-    const updateSummary = () => {
-      name.textContent = labelInput.value || this.i18n.t("shortcuts.unnamed", { digit: paddedDigit });
-      urlPreview.textContent = urlInput.value;
-      openLink.href = urlInput.value || "#";
-      openLink.classList.toggle("is-disabled", !urlInput.value);
-      this.updateFavicon(favicon, urlInput.value);
+    const applyUrlPreview = (url) => {
+      openLink.href = url || "#";
+      openLink.classList.toggle("is-disabled", !url);
+      this.updateFavicon(favicon, url);
     };
 
-    labelInput.addEventListener("input", updateSummary);
-    urlInput.addEventListener("input", updateSummary);
-    updateSummary();
+    row.querySelector(".validate-url").addEventListener("click", () => {
+      const result = this.validateUrl(urlInput.value.trim());
+      urlFeedback.textContent = result.message;
+      urlFeedback.classList.toggle("is-error", !result.ok);
+      applyUrlPreview(result.ok ? urlInput.value.trim() : "");
+    });
 
+    row.querySelector(".verify-key").addEventListener("click", async () => {
+      const result = await this.verifyKey(keyInput.value.trim());
+      keyFeedback.textContent = result.message;
+      keyFeedback.classList.toggle("is-error", !result.ok);
+    });
+
+    applyUrlPreview(entry.url);
     return row;
+  }
+
+  validateUrl(url) {
+    if (!url) {
+      return { ok: false, message: this.i18n.t("validate.urlEmpty") };
+    }
+
+    try {
+      const parsed = new URL(url);
+
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return { ok: false, message: this.i18n.t("validate.urlScheme") };
+      }
+
+      if (!parsed.hostname) {
+        return { ok: false, message: this.i18n.t("validate.urlInvalid") };
+      }
+
+      return { ok: true, message: this.i18n.t("validate.urlOk") };
+    } catch (error) {
+      return { ok: false, message: this.i18n.t("validate.urlInvalid") };
+    }
+  }
+
+  async verifyKey(key) {
+    if (!key) {
+      return { ok: false, message: this.i18n.t("validate.keyEmpty") };
+    }
+
+    if (!/^[A-Za-z0-9+/=]+$/.test(key)) {
+      return { ok: false, message: this.i18n.t("validate.keyInvalid") };
+    }
+
+    try {
+      const raw = atob(key);
+      const bytes = Uint8Array.from(raw, (character) => character.charCodeAt(0));
+      const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+      const extensionId = [...hash.slice(0, 16)]
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("")
+        .replace(/./g, (hex) => "abcdefghijklmnop"[parseInt(hex, 16)]);
+
+      return { ok: true, message: this.i18n.t("validate.keyOk", { id: extensionId }) };
+    } catch (error) {
+      return { ok: false, message: this.i18n.t("validate.keyInvalid") };
+    }
   }
 
   updateFavicon(image, url) {
@@ -234,6 +289,13 @@ class ManagerApp {
   }
 
   async saveAndGenerate() {
+    const count = Number(this.countInput.value);
+    const confirmKey = this.pruneCheckbox.checked ? "confirm.generatePrune" : "confirm.generate";
+
+    if (!window.confirm(this.i18n.t(confirmKey, { count }))) {
+      return;
+    }
+
     this.generateButton.setAttribute("aria-busy", "true");
 
     try {

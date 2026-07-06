@@ -22,6 +22,9 @@
 - 매니저 문서 `docs/MANAGER.md` 추가
 - 매니저에 설정 JSON 내보내기/가져오기 기능 추가
 - 더블클릭 실행용 런처 `Open-Manager.bat`(Windows), `open-manager.command`(macOS) 추가
+- 숏컷 목록에 URL `Validate` 버튼과 manifest key `ID`(확장 ID 계산) 버튼 추가
+- 재생성 전 덮어쓰기·삭제 내용을 알리는 확인 창 추가
+- README에 수동 확장 로드·핀 고정 가이드 추가
 
 ### Changed
 
@@ -38,6 +41,8 @@
 - 생성 개수 상한을 99개에서 64개로 변경
 - shortcut 번호를 두 자리(`01`) 형식으로 변경 (`shortcut-01`, `Omni-Shortcut 01`)
 - GitHub 저장소 이름을 `chrome-omni-shortcuts`(케밥 케이스)로 변경
+- 매니저 숏컷 목록을 접기/펼치기 방식에서 테이블 방식으로 변경
+- 매니저 타이틀을 `Chrome Omni-Shortcuts Manager`(한국어: `크롬 Omni-Shortcuts 매니저`)로 변경
 
 ### Removed
 

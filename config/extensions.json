@@ -1,5 +1,5 @@
 {
-  "count": 10,
+  "count": 1,
   "start": 1,
   "directoryTemplate": "shortcut-{digit}",
   "nameTemplate": "Omni-Shortcut {digit}",

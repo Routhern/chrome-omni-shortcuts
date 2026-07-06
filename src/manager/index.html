@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Omni-Shortcut Manager</title>
+  <title>Chrome Omni-Shortcuts Manager</title>
   <link rel="stylesheet" href="assets/pico.min.css">
   <link rel="stylesheet" href="manager.css">
 </head>
@@ -11,7 +11,7 @@
   <header class="container">
     <nav>
       <ul>
-        <li><strong data-i18n="app.title">Omni-Shortcut Manager</strong></li>
+        <li><strong data-i18n="app.title">Chrome Omni-Shortcuts Manager</strong></li>
       </ul>
       <ul>
         <li>
@@ -59,7 +59,20 @@
           its default target, and the key pins the Chrome extension ID so Windows and macOS
           share the same synced storage.
         </p>
-        <div id="shortcut-list"></div>
+        <div class="table-wrap">
+          <table id="shortcut-table">
+            <thead>
+              <tr>
+                <th class="col-no">#</th>
+                <th class="col-label" data-i18n="table.label">Label</th>
+                <th class="col-url" data-i18n="table.url">Target URL</th>
+                <th class="col-key" data-i18n="table.key">Manifest key</th>
+                <th class="col-status" data-i18n="table.status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="shortcut-list"></tbody>
+          </table>
+        </div>
         <footer class="shortcuts-footer">
           <button id="save-shortcuts-button" data-i18n="shortcuts.save">Save Shortcuts</button>
           <button id="export-button" class="secondary outline" data-i18n="shortcuts.export">Export JSON</button>
@@ -75,33 +88,33 @@
   </footer>
 
   <template id="shortcut-row-template">
-    <details class="shortcut-row">
-      <summary>
+    <tr class="shortcut-row">
+      <td class="cell-no">
         <img class="shortcut-favicon" alt="" width="20" height="20">
-        <span class="shortcut-name"></span>
-        <span class="shortcut-url-preview"></span>
+        <span class="shortcut-digit"></span>
+      </td>
+      <td class="cell-label">
+        <input type="text" class="shortcut-label" data-i18n-placeholder="shortcuts.labelPlaceholder">
+      </td>
+      <td class="cell-url">
+        <div class="input-group">
+          <input type="url" class="shortcut-url" placeholder="https://example.com/" spellcheck="false">
+          <button class="validate-url secondary" data-i18n="table.validate">Validate</button>
+        </div>
+        <small class="url-feedback"></small>
+      </td>
+      <td class="cell-key">
+        <div class="input-group">
+          <input type="text" class="shortcut-key" spellcheck="false" data-i18n-placeholder="table.keyPlaceholder">
+          <button class="verify-key secondary" data-i18n="table.verify">ID</button>
+        </div>
+        <small class="key-feedback"></small>
+      </td>
+      <td class="cell-status">
         <span class="shortcut-generated-badge"></span>
-      </summary>
-      <div class="grid">
-        <label>
-          <span data-i18n="shortcuts.labelField">Label</span>
-          <input type="text" class="shortcut-label" data-i18n-placeholder="shortcuts.labelPlaceholder">
-        </label>
-        <label>
-          <span data-i18n="shortcuts.urlField">Target URL</span>
-          <input type="url" class="shortcut-url" placeholder="https://example.com/">
-        </label>
-      </div>
-      <label>
-        <span data-i18n="shortcuts.keyField">Manifest key (pins the extension ID across devices)</span>
-        <textarea class="shortcut-key" rows="2" spellcheck="false"></textarea>
-      </label>
-      <div class="shortcut-actions">
-        <a class="shortcut-open" target="_blank" rel="noopener">
-          <span data-i18n="shortcuts.open">Open URL</span>
-        </a>
-      </div>
-    </details>
+        <a class="shortcut-open" target="_blank" rel="noopener" data-i18n="shortcuts.open">Open</a>
+      </td>
+    </tr>
   </template>
 
   <script src="app.js"></script>
