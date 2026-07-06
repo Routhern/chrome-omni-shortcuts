@@ -20,6 +20,8 @@ node scripts\generate-extensions.js --count 7 --prune
 node scripts\manager.js
 ```
 
+매니저 포트는 `OMNI_MANAGER_PORT` 환경변수로 변경할 수 있습니다. 사용자용 더블클릭 런처는 `Open-Manager.bat`(Windows)·`open-manager.command`(macOS)입니다. CLI의 `--count`는 해당 실행에만 적용되고 `config/extensions.json`에 저장되지 않습니다(개수를 영구 변경하려면 config의 `count`를 수정하거나 매니저에서 저장).
+
 검증은 자동화되어 있지 않습니다. `chrome://extensions`에서 개발자 모드로 `extensions/shortcut-*` 디렉터리를 압축해제 로드해 수동 확인합니다: Manifest 오류 없음, 매니저에서 URL 저장·재생성 후 확장 새로고침 시 아이콘이 favicon으로 변경, 버튼 클릭 시 탭 이동, 브라우저 재시작 후 유지.
 
 ## 아키텍처 (생성 파이프라인)
@@ -30,13 +32,13 @@ node scripts\manager.js
 2. 번호별 문구·개수는 `config/extensions.json`의 템플릿(`{digit}` 토큰), 숏컷별 URL·manifest key는 같은 파일의 `shortcuts` 맵 수정
 3. `node scripts\generate-extensions.js` 실행으로 `extensions/shortcut-NN` 재생성 (두 자리 번호)
 
-`config/extensions.json`의 `shortcuts[digit]`은 `{ label, url, key }` 구조입니다. `url`은 생성 시 `background.js`의 `DEFAULT_TARGET_URL`로 주입되고, `key`는 manifest의 `key` 필드가 되어 기기 간 확장 ID를 고정합니다.
+`config/extensions.json`의 `shortcuts[digit]`은 `{ label, url, key }` 구조입니다. `url`은 생성 시 `background.js`의 `DEFAULT_TARGET_URL`로 주입되고, `key`는 manifest의 `key` 필드가 되어 기기 간 확장 ID를 고정합니다. 생성 번호는 `start`부터 `count`개입니다. 구버전 `manifestKeys` 최상위 필드는 생성기에서 fallback으로만 읽히며, 매니저의 `PUT /api/config` 저장 시 제거됩니다.
 
 ### 숏컷 매니저 (scripts/manager.js + src/manager/)
 
-GUI 매니저는 npm 의존성 없는 Node http 서버로, `generate-extensions.js`를 모듈로 require해 재사용합니다. API: `GET /api/state`, `PUT /api/config`(count·shortcuts 전체 교체 방식), `POST /api/generate`. UI는 Pico CSS 벤더링(`src/manager/assets/pico.min.css`) + `src/manager/i18n/{en,ko}.json` 2개 국어(기본 영어)입니다. 문구를 추가할 때는 두 언어 파일 모두 갱신할 것. 설정 JSON 내보내기/가져오기는 클라이언트에서 처리하되 저장은 `PUT /api/config` 검증을 거칩니다.
+GUI 매니저는 npm 의존성 없는 Node http 서버로, `generate-extensions.js`를 모듈로 require해 재사용합니다. API: `GET /api/state`, `PUT /api/config`(count·shortcuts 전체 교체 방식; URL은 `http(s)://` 시작, key는 base64만 허용하는 서버 측 검증), `POST /api/generate`(body `{ prune: true }` 지원). UI는 Pico CSS 벤더링(`src/manager/assets/pico.min.css`) + `src/manager/i18n/{en,ko}.json` 2개 국어(기본 영어)입니다. 문구를 추가할 때는 두 언어 파일 모두 갱신할 것. 설정 JSON 내보내기/가져오기는 클라이언트에서 처리하되 저장은 `PUT /api/config` 검증을 거칩니다.
 
-`scripts/generate-extensions.js`는 템플릿 파일의 `__SHORTCUT_NAME__`, `__SHORTCUT_DESCRIPTION__`, `__SHORTCUT_ACTION_TITLE__` 등의 플레이스홀더를 config 템플릿 값으로 치환합니다.
+`scripts/generate-extensions.js`는 템플릿 파일의 `__SHORTCUT_NAME__`, `__SHORTCUT_DESCRIPTION__`, `__SHORTCUT_ACTION_TITLE__`, `__SHORTCUT_DEFAULT_URL__`(JS 문자열로 이스케이프됨) 등의 플레이스홀더를 config 값으로 치환합니다. 텍스트 파일(css/html/js/json/md/txt)만 치환 대상이고 나머지는 그대로 복사됩니다.
 
 ### 확장 내부 구조 (src/extension-template/)
 
