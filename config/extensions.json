@@ -1,5 +1,5 @@
 {
-  "count": 9,
+  "count": 10,
   "start": 1,
   "directoryTemplate": "shortcut-{digit}",
   "nameTemplate": "Omni-Shortcut {digit}",
@@ -7,5 +7,56 @@
   "actionTitleTemplate": "Target URL access via shortcut {digit}",
   "optionPageTitleTemplate": "Omni-Shortcut {digit}",
   "optionHeadingTemplate": "Omni-Shortcut {digit} Options",
-  "manifestKeys": {}
+  "shortcuts": {
+    "1": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "2": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "3": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "4": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "5": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "6": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "7": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "8": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "9": {
+      "label": "",
+      "url": "",
+      "key": ""
+    },
+    "10": {
+      "label": "",
+      "url": "",
+      "key": ""
+    }
+  }
 }

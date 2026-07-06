@@ -1,5 +1,5 @@
 // Injected by scripts/generate-extensions.js from config/extensions.json shortcuts[digit].url
-const DEFAULT_TARGET_URL = "__SHORTCUT_DEFAULT_URL__";
+const DEFAULT_TARGET_URL = "";
 
 class StorageManager {
   static async getTargetUrl() {

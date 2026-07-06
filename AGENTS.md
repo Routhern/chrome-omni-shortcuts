@@ -4,20 +4,19 @@
 
 ## 프로젝트 개요
 
-Chrome-OmniShortcut은 여러 개의 독립적인 Chrome 확장 프로그램 패키지를 제공하는 저장소입니다. 각 확장은 브라우저 툴바 버튼을 클릭했을 때 사용자가 저장한 대상 URL로 현재 탭을 이동시키는 단순한 바로가기 역할을 합니다.
+chrome-omni-shortcuts는 여러 개의 독립적인 Chrome 확장 프로그램 패키지를 제공하는 저장소입니다. 각 확장은 브라우저 툴바 버튼을 클릭했을 때 사용자가 저장한 대상 URL로 현재 탭을 이동시키는 단순한 바로가기 역할을 합니다.
 
-현재 패키지는 `extensions/shortcut-1`부터 `extensions/shortcut-9`까지 존재합니다. 구현 파일은 동일하고, 각 확장의 표시 이름만 `Omni-Shortcut 1`처럼 번호를 달리합니다.
+패키지 디렉터리는 `extensions/shortcut-01`부터 두 자리 번호로 생성됩니다(기본 10개, 최대 64개). 구현 파일은 동일하고, 각 확장의 표시 이름만 `Omni-Shortcut 01`처럼 번호를 달리합니다.
 
 ## 저장소 구조
 
 - `extensions/shortcut-*/manifest.json`: Chrome Manifest V3 확장 설정
-- `extensions/shortcut-*/background.js`: 툴바 버튼 클릭과 시작 시 아이콘 복원을 처리하는 서비스 워커
-- `extensions/shortcut-*/option.html`: 옵션 페이지 마크업
-- `extensions/shortcut-*/option.css`: 옵션 페이지 스타일
-- `extensions/shortcut-*/option.js`: URL 저장, favicon 조회, 아이콘 저장 로직
+- `extensions/shortcut-*/background.js`: 툴바 버튼 클릭, favicon 조회, 아이콘 설정을 모두 처리하는 서비스 워커 (옵션 페이지는 제거됨. URL은 매니저에서 중앙 관리)
 - `src/extension-template/`: 모든 shortcut 패키지의 공통 원본
-- `config/extensions.json`: 생성 개수와 번호별 문구 템플릿
-- `scripts/generate-extensions.js`: `extensions/shortcut-*` 결과물 생성 스크립트
+- `src/manager/`: 브라우저 기반 GUI 숏컷 매니저 UI (Pico CSS 벤더링, i18n JSON)
+- `config/extensions.json`: 생성 개수, 번호별 문구 템플릿, 숏컷별 `label`/`url`/`key` 콘테이너
+- `scripts/generate-extensions.js`: `extensions/shortcut-*` 결과물 생성 스크립트 (CLI 겸 모듈)
+- `scripts/manager.js`: 숏컷 매니저 로컬 서버 (`node scripts\manager.js`, 127.0.0.1:8151)
 - `docs/`: 사용자와 유지보수자를 위한 공개 문서
 - `docs/dev/`: 로컬 개발용 작업 문서. `.gitignore`에 등록되어 기본 커밋 대상이 아닙니다.
 
@@ -42,10 +41,10 @@ node scripts\generate-extensions.js
 수동 확인 항목:
 
 - 확장 로드 시 Manifest V3 오류가 없는지 확인
-- 옵션 페이지에서 URL 저장 가능 여부 확인
-- 저장 후 툴바 아이콘이 대상 사이트 favicon으로 바뀌는지 확인
+- 매니저에서 URL 저장·재생성 후 확장 새로고침 시 툴바 아이콘이 대상 사이트 favicon으로 바뀌는지 확인
 - 툴바 버튼 클릭 시 현재 탭이 저장된 URL로 이동하는지 확인
-- 브라우저 재시작 후 저장된 아이콘과 URL이 유지되는지 확인
+- 브라우저 재시작 후 아이콘과 URL이 유지되는지 확인
+- 매니저에서 JSON 내보내기/가져오기가 동작하는지 확인
 
 ## 문서 관리
 
@@ -53,10 +52,10 @@ node scripts\generate-extensions.js
 
 ## 주의할 점
 
-- `chrome.storage.sync`는 사용자 Chrome 계정 동기화 영역을 사용합니다. 저장 데이터 크기와 동기화 지연을 고려해야 합니다.
+- 아이콘 캐시는 `chrome.storage.local`을 사용합니다. `chrome.storage.sync`는 제거된 옵션 페이지가 저장했던 `targetUrl`의 레거시 fallback 용도로만 읽습니다.
 - favicon은 Google favicon endpoint에서 가져옵니다. 네트워크 실패나 favicon 미제공 사이트에 대한 예외 처리를 유지해야 합니다.
 - 모든 사이트 접근 권한인 `<all_urls>`는 사용하지 않습니다. favicon 조회는 `https://t0.gstatic.com/*` 범위에서만 수행합니다.
-- 현재 URL 유효성 검사는 빈 값 확인 수준입니다. 프로토콜 누락, 잘못된 URL, Chrome 내부 URL 등은 추가 정책 결정이 필요합니다.
+- URL 유효성 검사는 매니저 서버(`scripts/manager.js`)에서 수행하며 `http://`/`https://`만 허용합니다.
 
 ## 의사 소통
 

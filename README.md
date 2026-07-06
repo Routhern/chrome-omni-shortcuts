@@ -1,6 +1,6 @@
-# Chrome-OmniShortcut
+# chrome-omni-shortcuts
 
-Chrome-OmniShortcut은 자주 여는 웹사이트를 Chrome 툴바 버튼으로 빠르게 접근하는 확장 프로그램의 모음집입니다. 9개의 동일 기능을 갖는 확장프로그램을 사용해서 길고 편의성이 떨어지는 주소표시줄의 남은 여백을 창의적으로 대체할 수 있습니다.
+chrome-omni-shortcuts는 자주 여는 웹사이트를 Chrome 툴바 버튼으로 빠르게 접근하는 확장 프로그램의 모음집입니다. 9개의 동일 기능을 갖는 확장프로그램을 사용해서 길고 편의성이 떨어지는 주소표시줄의 남은 여백을 창의적으로 대체할 수 있습니다.
 
 이 저장소에는 `Omni-Shortcut 1`부터 `Omni-Shortcut 9`까지 9개의 독립 확장 패키지가 들어 있습니다. 각 확장마다 서로 다른 URL을 저장해 두면, Chrome 툴바에 여러 개의 개인 바로가기 버튼을 둘 수 있습니다.
 
@@ -19,33 +19,52 @@ Chrome-OmniShortcut은 자주 여는 웹사이트를 Chrome 툴바 버튼으로 
 2. Chrome에서 `chrome://extensions`를 엽니다.
 3. 오른쪽 위의 개발자 모드를 켭니다.
 4. 압축해제된 확장 프로그램을 로드합니다.
-5. `extensions/shortcut-1` 같은 확장 디렉터리를 선택합니다.
-6. 필요한 만큼 `shortcut-2`, `shortcut-3` 등을 같은 방식으로 추가합니다.
+5. `extensions/shortcut-01` 같은 확장 디렉터리를 선택합니다.
+6. 필요한 만큼 `shortcut-02`, `shortcut-03` 등을 같은 방식으로 추가합니다.
 
 ## 사용하기
 
-1. Chrome 확장 관리 화면에서 원하는 Omni-Shortcut의 세부정보를 엽니다.
-2. 확장 옵션을 엽니다.
-3. 이동할 사이트 URL을 입력합니다.
-4. `Save URL and Set Icon` 버튼을 누릅니다.
-5. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
+URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 페이지는 제거되었습니다.)
 
-저장 후 아이콘은 입력한 사이트의 favicon으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
+1. 숏컷 매니저를 엽니다. Windows에서는 `Open-Manager.bat`, macOS에서는 `open-manager.command`를 더블클릭하거나, 터미널에서 `node scripts\manager.js`를 실행합니다.
+2. 원하는 숏컷의 대상 URL을 입력하고 `Save & Generate`를 누릅니다.
+3. Chrome 확장 관리 화면에서 해당 확장을 새로고침(또는 새로 로드)합니다.
+4. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
 
-URL은 `http://` 또는 `https://` 주소만 저장할 수 있습니다. `example.com`처럼 프로토콜 없이 입력하면 `https://example.com/`으로 자동 보정됩니다.
+확장이 로드되면 아이콘은 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
+
+URL은 `http://` 또는 `https://` 주소만 저장할 수 있습니다.
 
 ## 여러 바로가기 만들기
 
 각 `shortcut-*` 디렉터리는 독립적인 Chrome 확장입니다. 예를 들어 다음처럼 사용할 수 있습니다.
 
-- `shortcut-1`: 메일
-- `shortcut-2`: 캘린더
-- `shortcut-3`: 업무 대시보드
-- `shortcut-4`: 문서 도구
+- `shortcut-01`: 메일
+- `shortcut-02`: 캘린더
+- `shortcut-03`: 업무 대시보드
+- `shortcut-04`: 문서 도구
 
 Chrome에 여러 디렉터리를 각각 로드하면 툴바에 여러 바로가기 버튼을 둘 수 있습니다.
 
 기본 패키지 수는 9개지만, 생성 파이프라인을 통해 7개나 13개처럼 다른 개수로도 관리할 수 있습니다. 자세한 내용은 `docs/GENERATION.md`를 참고하세요.
+
+## 숏컷 매니저 (GUI)
+
+CLI 생성 스크립트 대신 브라우저 기반 GUI로 숏컷을 관리할 수 있습니다. Windows에서는 저장소 루트의 `Open-Manager.bat`, macOS에서는 `open-manager.command`를 더블클릭하면 됩니다. 터미널에서는 다음 명령을 사용합니다.
+
+```powershell
+node scripts\manager.js
+```
+
+실행하면 `http://127.0.0.1:8151`이 브라우저에서 열립니다. 매니저에서 다음을 할 수 있습니다.
+
+- 숏컷 패키지 개수 변경과 재생성 (prune 옵션 포함)
+- 숏컷별 이름·대상 URL·manifest key를 중앙 JSON(`config/extensions.json`)에서 편집
+- 저장된 URL 목록을 favicon과 함께 한눈에 탐색하고 바로 열기
+- 설정 전체를 JSON 파일로 내보내기/가져오기 (백업, 기기 간 이전)
+- 라이트/다크 테마 전환, 영어/한국어 UI 전환
+
+manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS에서 같은 확장으로 인식되고, `chrome.storage.sync` 데이터가 기기 간에 연동됩니다. 매니저에 저장한 URL은 생성된 패키지에 기본 대상 URL로 주입됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
 
 ## 권한 안내
 
@@ -58,27 +77,29 @@ Chrome에 여러 디렉터리를 각각 로드하면 툴바에 여러 바로가�
 ## 프로젝트 구조
 
 ```text
-Chrome-OmniShortcut/
+chrome-omni-shortcuts/
+  Open-Manager.bat
+  open-manager.command
   extensions/
-    shortcut-1/
+    shortcut-01/
       manifest.json
       background.js
-      option.html
-      option.css
-      option.js
-    shortcut-2/
+    shortcut-02/
     ...
-    shortcut-9/
+    shortcut-10/
   docs/
     ARCHITECTURE.md
     CHANGELOG.md
     GENERATION.md
+    MANAGER.md
   config/
     extensions.json
   scripts/
     generate-extensions.js
+    manager.js
   src/
     extension-template/
+    manager/
 ```
 
 ## 개발 상태

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Omni-Shortcut Manager</title>
+  <link rel="stylesheet" href="assets/pico.min.css">
+  <link rel="stylesheet" href="manager.css">
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul>
+        <li><strong data-i18n="app.title">Omni-Shortcut Manager</strong></li>
+      </ul>
+      <ul>
+        <li>
+          <select id="language-select" aria-label="Language">
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+          </select>
+        </li>
+        <li>
+          <button id="theme-toggle" class="secondary outline" data-i18n="theme.auto">Theme: Auto</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="count-section">
+      <article>
+        <header data-i18n="count.heading">Package Count</header>
+        <p data-i18n="count.description">
+          Number of shortcut extension packages to generate from the template.
+        </p>
+        <div class="grid">
+          <label>
+            <span data-i18n="count.label">Count (1–64)</span>
+            <input type="number" id="count-input" min="1" max="64" step="1">
+          </label>
+          <label id="prune-label">
+            <input type="checkbox" id="prune-checkbox" role="switch">
+            <span data-i18n="count.prune">Remove extra shortcut-N directories (prune)</span>
+          </label>
+        </div>
+        <footer>
+          <button id="generate-button" data-i18n="count.generate">Save &amp; Generate</button>
+          <small id="generated-status"></small>
+        </footer>
+      </article>
+    </section>
+
+    <section id="shortcuts-section">
+      <article>
+        <header data-i18n="shortcuts.heading">Shortcuts</header>
+        <p data-i18n="shortcuts.description">
+          Central registry of every shortcut. The URL is baked into the generated package as
+          its default target, and the key pins the Chrome extension ID so Windows and macOS
+          share the same synced storage.
+        </p>
+        <div id="shortcut-list"></div>
+        <footer class="shortcuts-footer">
+          <button id="save-shortcuts-button" data-i18n="shortcuts.save">Save Shortcuts</button>
+          <button id="export-button" class="secondary outline" data-i18n="shortcuts.export">Export JSON</button>
+          <button id="import-button" class="secondary outline" data-i18n="shortcuts.import">Import JSON</button>
+          <input type="file" id="import-file" accept="application/json,.json" hidden>
+        </footer>
+      </article>
+    </section>
+  </main>
+
+  <footer class="container">
+    <small id="status-message" role="status"></small>
+  </footer>
+
+  <template id="shortcut-row-template">
+    <details class="shortcut-row">
+      <summary>
+        <img class="shortcut-favicon" alt="" width="20" height="20">
+        <span class="shortcut-name"></span>
+        <span class="shortcut-url-preview"></span>
+        <span class="shortcut-generated-badge"></span>
+      </summary>
+      <div class="grid">
+        <label>
+          <span data-i18n="shortcuts.labelField">Label</span>
+          <input type="text" class="shortcut-label" data-i18n-placeholder="shortcuts.labelPlaceholder">
+        </label>
+        <label>
+          <span data-i18n="shortcuts.urlField">Target URL</span>
+          <input type="url" class="shortcut-url" placeholder="https://example.com/">
+        </label>
+      </div>
+      <label>
+        <span data-i18n="shortcuts.keyField">Manifest key (pins the extension ID across devices)</span>
+        <textarea class="shortcut-key" rows="2" spellcheck="false"></textarea>
+      </label>
+      <div class="shortcut-actions">
+        <a class="shortcut-open" target="_blank" rel="noopener">
+          <span data-i18n="shortcuts.open">Open URL</span>
+        </a>
+      </div>
+    </details>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

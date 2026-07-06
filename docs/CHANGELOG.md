@@ -15,6 +15,13 @@
 - favicon 후보 탐색, 다크/라이트 모드 우선순위, 기본 아이콘 fallback 추가
 - 확장 패키지 공동 관리를 위한 템플릿 기반 생성 파이프라인 추가
 - shortcut 번호를 포함하는 `Target URL access via shortcut {digit}` 문구 추가
+- 브라우저 기반 GUI 숏컷 매니저 추가 (`node scripts\manager.js`, npm 의존성 없음)
+- 숏컷별 `label`/`url`/`key`를 보관하는 중앙 `shortcuts` 콘테이너를 `config/extensions.json`에 추가
+- 매니저에 라이트/다크 테마 전환과 영어/한국어 UI(i18n JSON) 추가
+- 생성 시 중앙 URL을 각 패키지의 기본 대상 URL(`DEFAULT_TARGET_URL`)로 주입하는 기능 추가
+- 매니저 문서 `docs/MANAGER.md` 추가
+- 매니저에 설정 JSON 내보내기/가져오기 기능 추가
+- 더블클릭 실행용 런처 `Open-Manager.bat`(Windows), `open-manager.command`(macOS) 추가
 
 ### Changed
 
@@ -24,6 +31,17 @@
 - 모든 사이트 접근 권한을 제거하고 favicon 조회 host permission을 `https://t0.gstatic.com/*`로 축소
 - 사용하지 않는 `activeTab` 권한 제거
 - 공통 확장 코드를 `src/extension-template/`에서 관리하도록 구조화
+- `config/extensions.json`의 `manifestKeys`를 `shortcuts[digit].key`로 통합 (기존 키는 fallback으로 계속 인식)
+- `scripts/generate-extensions.js`를 모듈로 분리해 매니저 서버에서 재사용 가능하도록 변경
+- favicon 조회와 아이콘 설정을 배경 서비스 워커로 이동해 확장이 로드 시 자동으로 아이콘을 설정하도록 변경
+- 아이콘 캐시를 `chrome.storage.sync`에서 `chrome.storage.local`로 이동 (URL은 패키지에 주입되므로 동기화 불필요)
+- 생성 개수 상한을 99개에서 64개로 변경
+- shortcut 번호를 두 자리(`01`) 형식으로 변경 (`shortcut-01`, `Omni-Shortcut 01`)
+- GitHub 저장소 이름을 `chrome-omni-shortcuts`(케밥 케이스)로 변경
+
+### Removed
+
+- 레거시 확장별 옵션 페이지(`option.html`/`option.css`/`option.js`) 제거. URL 설정은 숏컷 매니저에서 중앙 관리
 
 ## [1.0.0] - 2025-01-24
 

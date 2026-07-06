@@ -38,12 +38,12 @@ function parseArgs(argv) {
   return args;
 }
 
-function readConfig(args) {
+function readConfig(overrides = {}) {
   const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-  const count = args.count || config.count;
+  const count = overrides.count || config.count;
 
-  if (!Number.isInteger(count) || count < 1 || count > 99) {
-    throw new Error("Extension count must be an integer between 1 and 99.");
+  if (!Number.isInteger(count) || count < 1 || count > 64) {
+    throw new Error("Extension count must be an integer between 1 and 64.");
   }
 
   if (!Number.isInteger(config.start) || config.start < 1) {
@@ -56,6 +56,10 @@ function readConfig(args) {
   };
 }
 
+function writeConfig(config) {
+  fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+}
+
 function formatTemplate(template, values) {
   return template.replace(/\{(\w+)\}/g, (match, key) => {
     if (!Object.prototype.hasOwnProperty.call(values, key)) {
@@ -66,10 +70,25 @@ function formatTemplate(template, values) {
   });
 }
 
+function getShortcutEntry(config, digit) {
+  const entry = config.shortcuts?.[String(digit)] || {};
+
+  return {
+    label: typeof entry.label === "string" ? entry.label : "",
+    url: typeof entry.url === "string" ? entry.url : "",
+    key: typeof entry.key === "string" ? entry.key : ""
+  };
+}
+
+function padDigit(digit) {
+  return String(digit).padStart(2, "0");
+}
+
 function getShortcutValues(config, digit) {
   const values = {
-    digit: String(digit)
+    digit: padDigit(digit)
   };
+  const entry = getShortcutEntry(config, digit);
 
   return {
     digit,
@@ -79,18 +98,24 @@ function getShortcutValues(config, digit) {
     actionTitle: formatTemplate(config.actionTitleTemplate, values),
     optionPageTitle: formatTemplate(config.optionPageTitleTemplate, values),
     optionHeading: formatTemplate(config.optionHeadingTemplate, values),
-    manifestKey: config.manifestKeys?.[String(digit)] || ""
+    defaultUrl: entry.url,
+    manifestKey: entry.key || config.manifestKeys?.[String(digit)] || ""
   };
+}
+
+function escapeForJsString(value) {
+  return JSON.stringify(value).slice(1, -1);
 }
 
 function replacePlaceholders(content, shortcut) {
   return content
-    .replaceAll("__SHORTCUT_DIGIT__", String(shortcut.digit))
+    .replaceAll("__SHORTCUT_DIGIT__", padDigit(shortcut.digit))
     .replaceAll("__SHORTCUT_NAME__", shortcut.name)
     .replaceAll("__SHORTCUT_DESCRIPTION__", shortcut.description)
     .replaceAll("__SHORTCUT_ACTION_TITLE__", shortcut.actionTitle)
     .replaceAll("__SHORTCUT_OPTION_PAGE_TITLE__", shortcut.optionPageTitle)
-    .replaceAll("__SHORTCUT_OPTION_HEADING__", shortcut.optionHeading);
+    .replaceAll("__SHORTCUT_OPTION_HEADING__", shortcut.optionHeading)
+    .replaceAll("__SHORTCUT_DEFAULT_URL__", escapeForJsString(shortcut.defaultUrl));
 }
 
 function ensureWithin(parent, child) {
@@ -147,8 +172,9 @@ function writeShortcut(config, digit) {
   return outputDir;
 }
 
-function pruneExtensions(config, generatedDirs) {
+function pruneExtensions(generatedDirs) {
   const generated = new Set(generatedDirs.map((dir) => path.resolve(dir)));
+  const pruned = [];
 
   for (const entry of fs.readdirSync(outputRoot, { withFileTypes: true })) {
     if (!entry.isDirectory() || !/^shortcut-\d+$/.test(entry.name)) {
@@ -160,25 +186,61 @@ function pruneExtensions(config, generatedDirs) {
 
     if (!generated.has(candidate)) {
       fs.rmSync(candidate, { recursive: true, force: true });
-      console.log(`Pruned ${path.relative(repoRoot, candidate)}`);
+      pruned.push(path.relative(repoRoot, candidate));
     }
   }
+
+  return pruned;
 }
 
-function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const config = readConfig(args);
+function listGeneratedExtensions() {
+  if (!fs.existsSync(outputRoot)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(outputRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^shortcut-\d+$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort((a, b) => Number(a.split("-")[1]) - Number(b.split("-")[1]));
+}
+
+function generateExtensions(options = {}) {
+  const config = readConfig(options);
   const generatedDirs = [];
 
   for (let offset = 0; offset < config.count; offset += 1) {
     generatedDirs.push(writeShortcut(config, config.start + offset));
   }
 
-  if (args.prune) {
-    pruneExtensions(config, generatedDirs);
-  }
+  const pruned = options.prune ? pruneExtensions(generatedDirs) : [];
 
-  console.log(`Generated ${generatedDirs.length} extension package(s).`);
+  return {
+    generated: generatedDirs.map((dir) => path.relative(repoRoot, dir).replaceAll(path.sep, "/")),
+    pruned: pruned.map((dir) => dir.replaceAll(path.sep, "/"))
+  };
 }
 
-main();
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const result = generateExtensions(args);
+
+  for (const dir of result.pruned) {
+    console.log(`Pruned ${dir}`);
+  }
+
+  console.log(`Generated ${result.generated.length} extension package(s).`);
+}
+
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  repoRoot,
+  configPath,
+  readConfig,
+  writeConfig,
+  generateExtensions,
+  listGeneratedExtensions
+};

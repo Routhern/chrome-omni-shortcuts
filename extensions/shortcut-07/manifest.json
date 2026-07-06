@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "__SHORTCUT_NAME__",
-  "description": "__SHORTCUT_DESCRIPTION__",
+  "name": "Omni-Shortcut 07",
+  "description": "Target URL access via shortcut 07",
   "version": "1.0",
   "permissions": [
     "storage",
@@ -14,6 +14,6 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "__SHORTCUT_ACTION_TITLE__"
+    "default_title": "Target URL access via shortcut 07"
   }
 }

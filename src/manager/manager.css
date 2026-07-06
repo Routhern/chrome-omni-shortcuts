@@ -1,0 +1,85 @@
+header.container nav select#language-select {
+  width: auto;
+  margin-bottom: 0;
+}
+
+header.container nav button#theme-toggle {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+#prune-label {
+  align-self: end;
+}
+
+.shortcut-row summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.shortcut-favicon {
+  flex-shrink: 0;
+  border-radius: 4px;
+  visibility: hidden;
+}
+
+.shortcut-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.shortcut-url-preview {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--pico-muted-color);
+  font-size: 0.85em;
+}
+
+.shortcut-generated-badge {
+  flex-shrink: 0;
+  font-size: 0.75em;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--pico-muted-border-color);
+  color: var(--pico-muted-color);
+}
+
+.shortcut-generated-badge.is-generated {
+  background: var(--pico-ins-color);
+  color: var(--pico-contrast-inverse);
+}
+
+.shortcut-key {
+  font-family: var(--pico-font-family-monospace);
+  font-size: 0.8em;
+  word-break: break-all;
+}
+
+.shortcut-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.shortcut-open.is-disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.shortcuts-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.shortcuts-footer button {
+  width: auto;
+  margin-bottom: 0;
+}
+
+#status-message.is-error {
+  color: var(--pico-del-color);
+}
