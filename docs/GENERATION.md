@@ -56,6 +56,14 @@ node scripts\generate-extensions.js --count 7 --prune
 
 `--prune`은 `extensions/shortcut-N` 형식의 디렉터리만 대상으로 합니다.
 
+Chrome 프로필이 manifest key가 있는 압축해제 확장을 거부하는 경우, 로컬 호환 모드로 key 필드를 빼고 생성할 수 있습니다.
+
+```powershell
+node scripts\generate-extensions.js --no-manifest-key
+```
+
+이 옵션은 생성 결과물의 manifest에서만 key를 생략합니다. `config/extensions.json`의 `shortcuts[digit].key` 값은 보존됩니다.
+
 ## config/extensions.json 규격
 
 ```json

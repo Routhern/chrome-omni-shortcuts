@@ -9,6 +9,7 @@
 - 저장소 문서 초안 추가
 - 사용자용 `README.md` 초안 추가
 - 아키텍처 설명 문서 추가
+- 문제 해결 문서 `docs/TROUBLESHOOTING.md` 추가
 - 에이전트 작업 지침 문서 추가
 - 로컬 개발 문서 집합을 위한 `docs/dev/` 작업 공간 추가
 - 옵션 페이지 URL 검증 정책 추가
@@ -29,7 +30,10 @@
 - Manifest key 감사/복구 기능 추가: `GET /api/key-audit`, `POST /api/key-autofix`, UI의 키 상태 패널/행별 경고/자동복구 버튼
 - UI 자동복구 버튼이 key 교체 후 확장 재생성까지 자동으로 이어지도록 개선
 - 각 숏컷 패키지에 Chrome 시작 직후 표시할 번호 기반 기본 PNG 아이콘 자동 생성 추가
-- 압축해제 확장이 Chrome 재시작 후 자동 복원되지 않는 프로필을 위한 `Open-Chrome-With-Shortcuts.bat` 런처 추가
+- manifest key가 있는 압축해제 확장을 거부하는 Chrome 프로필을 위한 `--no-manifest-key` 생성 옵션 추가
+- 다중 `--load-extension`을 영구 등록 해결책으로 안내하던 문구를 수동 로드 기준으로 정정
+- Chrome 프로필 확장 등록부/동기화 문제를 조사하며 사용한 로컬 진단·복구 도구를 `docs/dev/` 아래 비공개 작업 자료로 분리
+- Chrome 동기화/확장 등록부 꼬임으로 압축해제 확장이 재시작 후 사라졌던 원인과 복구 절차 문서화
 
 ### Fixed
 

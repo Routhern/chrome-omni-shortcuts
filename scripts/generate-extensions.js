@@ -24,6 +24,7 @@ const digitSegments = {
 function parseArgs(argv) {
   const args = {
     count: null,
+    noManifestKey: false,
     prune: false
   };
 
@@ -32,6 +33,11 @@ function parseArgs(argv) {
 
     if (arg === "--prune") {
       args.prune = true;
+      continue;
+    }
+
+    if (arg === "--no-manifest-key") {
+      args.noManifestKey = true;
       continue;
     }
 
@@ -346,14 +352,18 @@ function applyManifestKey(manifestPath, manifestKey) {
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
-function writeShortcut(config, digit) {
+function writeShortcut(config, digit, options = {}) {
   const shortcut = getShortcutValues(config, digit);
   const outputDir = path.join(outputRoot, shortcut.directoryName);
   ensureWithin(outputRoot, outputDir);
   fs.mkdirSync(outputDir, { recursive: true });
   copyTemplateDirectory(templateDir, outputDir, shortcut);
   writeIconFiles(outputDir, shortcut);
-  applyManifestKey(path.join(outputDir, "manifest.json"), shortcut.manifestKey);
+
+  if (!options.noManifestKey) {
+    applyManifestKey(path.join(outputDir, "manifest.json"), shortcut.manifestKey);
+  }
+
   return outputDir;
 }
 
@@ -395,7 +405,7 @@ function generateExtensions(options = {}) {
   const generatedDirs = [];
 
   for (let offset = 0; offset < config.count; offset += 1) {
-    generatedDirs.push(writeShortcut(config, config.start + offset));
+    generatedDirs.push(writeShortcut(config, config.start + offset, options));
   }
 
   const pruned = options.prune ? pruneExtensions(generatedDirs) : [];
@@ -415,6 +425,10 @@ function main() {
   }
 
   console.log(`Generated ${result.generated.length} extension package(s).`);
+
+  if (args.noManifestKey) {
+    console.log("Manifest key fields were omitted for local Chrome profile compatibility.");
+  }
 }
 
 if (require.main === module) {

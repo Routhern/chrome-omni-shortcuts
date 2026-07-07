@@ -89,6 +89,8 @@ extensions/shortcut-N/
 
 `chrome.storage.sync`는 같은 Chrome 계정에서 동기화될 수 있지만, 동기화 범위는 확장 ID 단위입니다. Windows, macOS, 여러 사용자 환경에서 같은 shortcut 설정을 공유하려면 각 생성 패키지의 확장 ID가 동일하게 유지되어야 합니다. Chrome Web Store 배포 ID를 사용하거나, 개발 배포에서는 `config/extensions.json`의 `shortcuts[digit].key`로 번호별 manifest key를 관리합니다.
 
+압축해제 확장의 설치/활성화 상태는 이 저장소가 아니라 Chrome 프로필의 `Preferences`/`Secure Preferences`와 확장 상태 폴더가 관리합니다. 해당 등록부가 꼬이면 확장 파일과 manifest가 정상이어도 재시작 후 언로드될 수 있습니다. 이 저장소의 복구 스크립트는 쿠키나 로그인 데이터를 지우지 않고 확장 등록부/상태 폴더만 백업 이동하도록 분리되어 있습니다. 자세한 복구 기록은 `docs/TROUBLESHOOTING.md`를 참고합니다.
+
 ## 외부 의존성
 
 런타임에서 사용하는 외부 서비스는 Google favicon 조회 endpoint입니다.

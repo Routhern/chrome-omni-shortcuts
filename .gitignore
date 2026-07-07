@@ -1,4 +1,7 @@
 .DS_Store
+.chrome-shortcut-profile/
+.chrome-shortcut-diagnostic-profile/
+chrome-shortcut-diagnostic.log
 
 # Local development notes and working drafts
 docs/dev/
