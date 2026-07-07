@@ -16,6 +16,9 @@ node scripts\generate-extensions.js
 node scripts\generate-extensions.js --count 13
 node scripts\generate-extensions.js --count 7 --prune
 
+# manifest key 포함 여부 재정의 (config의 manifestKeyMode 기본값을 덮어씀)
+node scripts\generate-extensions.js --manifest-key-mode include
+
 # GUI 숏컷 매니저 (127.0.0.1:8151, --no-open으로 자동 브라우저 열기 끄기)
 node scripts\manager.js
 ```
@@ -32,11 +35,13 @@ node scripts\manager.js
 2. 번호별 문구·개수는 `config/extensions.json`의 템플릿(`{digit}` 토큰), 숏컷별 URL·manifest key는 같은 파일의 `shortcuts` 맵 수정
 3. `node scripts\generate-extensions.js` 실행으로 `extensions/shortcut-NN` 재생성 (두 자리 번호)
 
-`config/extensions.json`의 `shortcuts[digit]`은 `{ label, url, key }` 구조입니다. `url`은 생성 시 `background.js`의 `DEFAULT_TARGET_URL`로 주입되고, `key`는 manifest의 `key` 필드가 되어 기기 간 확장 ID를 고정합니다. 생성 번호는 `start`부터 `count`개입니다. `key`는 base64 공개키(SPKI)여야 하며 32자 확장 ID가 아닙니다 — 매니저의 `키 생성` 버튼이나 `POST /api/keygen`으로 만듭니다.
+`config/extensions.json`의 `shortcuts[digit]`은 `{ label, url, key }` 구조입니다. `url`은 생성 시 `background.js`의 `DEFAULT_TARGET_URL`로 주입됩니다. 생성 번호는 `start`부터 `count`개입니다.
+
+**manifest key 모드**: config의 `manifestKeyMode`(`omit`|`include`, 현재 기본 `omit` = "로컬 안전 모드")가 manifest에 `key` 필드를 넣을지 결정합니다. `omit`이면 결과물에서 key를 빼서 이 PC의 Chrome 프로필에서 압축해제 확장이 재시작 후 사라지는 문제를 피하고, `include`면 config의 `key`로 기기 간 확장 ID를 고정합니다(생성 전 key 감사 통과 필요). `key`는 base64 공개키(SPKI)여야 하며 32자 확장 ID가 아닙니다 — 매니저의 `키 생성` 버튼이나 `POST /api/keygen`으로 만듭니다. key 문제 진단·복구 이력은 `docs/TROUBLESHOOTING.md` 참고.
 
 ### 숏컷 매니저 (scripts/manager.js + src/manager/)
 
-GUI 매니저는 npm 의존성 없는 Node http 서버로, `generate-extensions.js`를 모듈로 require해 재사용합니다. API: `GET /api/state`, `PUT /api/config`(count·shortcuts 전체 교체 방식; URL은 `http(s)://` 시작, key는 base64만 허용하는 서버 측 검증), `POST /api/generate`(body `{ prune: true }` 지원). UI는 Pico CSS 벤더링(`src/manager/assets/pico.min.css`) + `src/manager/i18n/{en,ko}.json` 2개 국어(기본 영어)입니다. 문구를 추가할 때는 두 언어 파일 모두 갱신할 것. 설정 JSON 내보내기/가져오기는 클라이언트에서 처리하되 저장은 `PUT /api/config` 검증을 거칩니다.
+GUI 매니저는 npm 의존성 없는 Node http 서버로, `generate-extensions.js`를 모듈로 require해 재사용합니다. API: `GET /api/state`, `PUT /api/config`(count·shortcuts 전체 교체 방식; URL은 `http(s)://` 시작, key는 base64만 허용하는 서버 측 검증), `POST /api/generate`(body `{ prune, manifestKeyMode }` 지원; `include` 모드는 key 감사 통과 필요), `GET /api/key-audit`(key 충돌/오류 검사), `POST /api/key-autofix`(문제 key 교체 후 config 저장; body `{ scope: "active"|"all" }`), `POST /api/keygen`. UI는 Pico CSS 벤더링(`src/manager/assets/pico.min.css`) + `src/manager/i18n/{en,ko}.json` 2개 국어(기본 영어)입니다. 문구를 추가할 때는 두 언어 파일 모두 갱신할 것. 설정 JSON 내보내기/가져오기는 클라이언트에서 처리하되 저장은 `PUT /api/config` 검증을 거칩니다.
 
 `scripts/generate-extensions.js`는 템플릿 파일의 `__SHORTCUT_NAME__`, `__SHORTCUT_DESCRIPTION__`, `__SHORTCUT_ACTION_TITLE__`, `__SHORTCUT_DEFAULT_URL__`(JS 문자열로 이스케이프됨) 등의 플레이스홀더를 config 값으로 치환합니다. 텍스트 파일(css/html/js/json/md/txt)만 치환 대상이고 나머지는 그대로 복사됩니다.
 
