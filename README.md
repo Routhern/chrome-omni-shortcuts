@@ -2,7 +2,7 @@
 
 chrome-omni-shortcuts는 자주 여는 웹사이트를 Chrome 툴바 버튼으로 빠르게 접근하는 확장 프로그램의 모음집입니다. 9개의 동일 기능을 갖는 확장프로그램을 사용해서 길고 편의성이 떨어지는 주소표시줄의 남은 여백을 창의적으로 대체할 수 있습니다.
 
-이 저장소에는 `Omni-Shortcut 1`부터 `Omni-Shortcut 9`까지 9개의 독립 확장 패키지가 들어 있습니다. 각 확장마다 서로 다른 URL을 저장해 두면, Chrome 툴바에 여러 개의 개인 바로가기 버튼을 둘 수 있습니다.
+이 저장소에는 `Omni-Shortcut 01`부터 `Omni-Shortcut 09`까지 9개의 독립 확장 패키지가 들어 있습니다. 각 확장마다 서로 다른 URL을 저장해 두면, Chrome 툴바에 여러 개의 개인 바로가기 버튼을 둘 수 있습니다.
 
 ## 주요 기능
 
@@ -117,9 +117,10 @@ chrome-omni-shortcuts/
     shortcut-01/
       manifest.json
       background.js
+      icon.svg
     shortcut-02/
     ...
-    shortcut-10/
+    shortcut-09/
   docs/
     ARCHITECTURE.md
     CHANGELOG.md
