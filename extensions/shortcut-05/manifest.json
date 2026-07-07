@@ -11,11 +11,11 @@
     "https://t0.gstatic.com/*"
   ],
   "icons": {
-    "16": "icons/icon-16.png",
-    "24": "icons/icon-24.png",
-    "32": "icons/icon-32.png",
-    "48": "icons/icon-48.png",
-    "128": "icons/icon-128.png"
+    "16": "icon.svg",
+    "24": "icon.svg",
+    "32": "icon.svg",
+    "48": "icon.svg",
+    "128": "icon.svg"
   },
   "background": {
     "service_worker": "background.js"
@@ -23,11 +23,11 @@
   "action": {
     "default_title": "Target URL access via shortcut 05",
     "default_icon": {
-      "16": "icons/icon-16.png",
-      "24": "icons/icon-24.png",
-      "32": "icons/icon-32.png",
-      "48": "icons/icon-48.png",
-      "128": "icons/icon-128.png"
+      "16": "icon.svg",
+      "24": "icon.svg",
+      "32": "icon.svg",
+      "48": "icon.svg",
+      "128": "icon.svg"
     }
   }
 }

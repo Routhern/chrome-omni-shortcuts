@@ -12,6 +12,39 @@ header.container nav button#theme-toggle {
   align-self: end;
 }
 
+#manifest-mode-fieldset {
+  margin-top: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+#manifest-mode-fieldset legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.mode-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  margin-bottom: 0.2rem;
+}
+
+.mode-toggle input {
+  margin-bottom: 0;
+}
+
+#manifest-mode-help {
+  display: block;
+  color: var(--pico-muted-color);
+}
+
 #key-health-panel {
   display: flex;
   align-items: center;

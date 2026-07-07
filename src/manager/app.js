@@ -67,6 +67,8 @@ class ManagerApp {
     this.theme = new ThemeManager(document.getElementById("theme-toggle"), this.i18n);
     this.countInput = document.getElementById("count-input");
     this.pruneCheckbox = document.getElementById("prune-checkbox");
+    this.manifestKeyModeInputs = [...document.querySelectorAll("input[name='manifest-key-mode']")];
+    this.manifestModeHelp = document.getElementById("manifest-mode-help");
     this.generateButton = document.getElementById("generate-button");
     this.generateConfirmDialog = document.getElementById("generate-confirm-dialog");
     this.generateConfirmMessage = document.getElementById("generate-confirm-message");
@@ -104,6 +106,14 @@ class ManagerApp {
     this.saveShortcutsButton.addEventListener("click", () => this.saveShortcuts());
     this.auditKeysButton?.addEventListener("click", () => this.refreshKeyAudit(true));
     this.autofixKeysButton?.addEventListener("click", () => this.autoFixKeys());
+    for (const input of this.manifestKeyModeInputs) {
+      input.addEventListener("change", () => {
+        this.setKeyAudit(null);
+        this.updateManifestModeHelp();
+        this.renderKeyAuditSummary();
+        this.renderShortcuts();
+      });
+    }
 
     const importFile = document.getElementById("import-file");
     document.getElementById("export-button").addEventListener("click", () => this.exportConfig());
@@ -132,12 +142,12 @@ class ManagerApp {
 
   async refreshState() {
     const [stateResponse, auditResponse] = await Promise.all([fetch("/api/state"), fetch("/api/key-audit")]);
-    const state = await stateResponse.json();
+    const state = await this.readApiJson(stateResponse);
     this.config = state.config;
     this.generated = state.generated;
 
     if (auditResponse.ok) {
-      const payload = await auditResponse.json();
+      const payload = await this.readApiJson(auditResponse);
       this.setKeyAudit(payload.audit);
     } else {
       this.setKeyAudit(null);
@@ -161,6 +171,7 @@ class ManagerApp {
 
   render() {
     this.countInput.value = this.config.count;
+    this.applyManifestKeyMode(this.config.manifestKeyMode || "omit");
     this.generatedStatus.textContent = this.i18n.t("count.generatedStatus", {
       generated: this.generated.length
     });
@@ -169,6 +180,17 @@ class ManagerApp {
   }
 
   renderKeyAuditSummary() {
+    if (this.getManifestKeyMode() === "omit") {
+      this.keyAuditSummary.textContent = this.i18n.t("keyAudit.summaryOmitted");
+      this.keyAuditSummary.classList.remove("is-error");
+
+      if (this.autofixKeysButton) {
+        this.autofixKeysButton.disabled = true;
+      }
+
+      return;
+    }
+
     if (!this.keyAudit?.summary) {
       this.keyAuditSummary.textContent = this.i18n.t("keyAudit.summaryUnavailable");
       this.keyAuditSummary.classList.add("is-error");
@@ -228,11 +250,15 @@ class ManagerApp {
     const keyFeedback = row.querySelector(".key-feedback");
     const keyAuditFeedback = row.querySelector(".key-audit-feedback");
     const auditEntry = this.keyAuditByDigit.get(String(digit));
+    const localSafeMode = this.getManifestKeyMode() === "omit";
 
     row.querySelector(".shortcut-digit").textContent = paddedDigit;
     labelInput.value = entry.label;
     urlInput.value = entry.url;
     keyInput.value = entry.key;
+    keyInput.disabled = localSafeMode;
+    row.querySelector(".generate-key").disabled = localSafeMode;
+    row.querySelector(".verify-key").disabled = localSafeMode;
 
     const isGenerated = this.generated.includes(`shortcut-${paddedDigit}`);
     badge.textContent = this.i18n.t(isGenerated ? "shortcuts.generated" : "shortcuts.notGenerated");
@@ -260,11 +286,7 @@ class ManagerApp {
     row.querySelector(".generate-key").addEventListener("click", async () => {
       try {
         const response = await fetch("/api/keygen", { method: "POST" });
-        const payload = await response.json();
-
-        if (!response.ok) {
-          throw new Error(payload.error || response.statusText);
-        }
+        const payload = await this.readApiJson(response);
 
         keyInput.value = payload.key;
         keyFeedback.textContent = this.i18n.t("validate.keyOk", { id: payload.id });
@@ -301,6 +323,12 @@ class ManagerApp {
       feedbackElement.textContent = this.i18n.t("keyAudit.row.ok", {
         id: auditEntry.extensionId
       });
+      row.classList.add("key-audit-ok");
+      return;
+    }
+
+    if (auditEntry.issueCode === "OMITTED") {
+      feedbackElement.textContent = this.i18n.t("keyAudit.row.omitted");
       row.classList.add("key-audit-ok");
       return;
     }
@@ -422,6 +450,47 @@ class ManagerApp {
     return shortcuts;
   }
 
+  getManifestKeyMode() {
+    const selected = this.manifestKeyModeInputs.find((input) => input.checked);
+    return selected?.value === "include" ? "include" : "omit";
+  }
+
+  applyManifestKeyMode(mode) {
+    const normalizedMode = mode === "include" ? "include" : "omit";
+
+    for (const input of this.manifestKeyModeInputs) {
+      input.checked = input.value === normalizedMode;
+    }
+
+    this.updateManifestModeHelp();
+  }
+
+  updateManifestModeHelp() {
+    if (!this.manifestModeHelp) {
+      return;
+    }
+
+    this.manifestModeHelp.textContent = this.i18n.t(
+      this.getManifestKeyMode() === "include" ? "manifestMode.helpInclude" : "manifestMode.helpOmit"
+    );
+  }
+
+  async readApiJson(response) {
+    let payload = null;
+
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(payload.error || response.statusText);
+    }
+
+    return payload;
+  }
+
   async putConfig(update) {
     const response = await fetch("/api/config", {
       method: "PUT",
@@ -429,18 +498,17 @@ class ManagerApp {
       body: JSON.stringify(update)
     });
 
-    const payload = await response.json();
-
-    if (!response.ok) {
-      throw new Error(payload.error || response.statusText);
-    }
+    const payload = await this.readApiJson(response);
 
     this.config = payload.config;
   }
 
   async saveShortcuts() {
     try {
-      await this.putConfig({ shortcuts: this.collectShortcuts() });
+      await this.putConfig({
+        manifestKeyMode: this.getManifestKeyMode(),
+        shortcuts: this.collectShortcuts()
+      });
       this.showStatus(this.i18n.t("status.saved"), true);
       await this.refreshState();
     } catch (error) {
@@ -455,11 +523,7 @@ class ManagerApp {
       }
 
       const response = await fetch("/api/key-audit");
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || response.statusText);
-      }
+      const payload = await this.readApiJson(response);
 
       this.setKeyAudit(payload.audit);
       this.render();
@@ -477,7 +541,7 @@ class ManagerApp {
   }
 
   async autoFixKeys() {
-    if (!window.confirm(this.i18n.t("confirm.autofixKeys"))) {
+    if (!(await this.confirmAction(this.i18n.t("confirm.autofixKeys")))) {
       return;
     }
 
@@ -492,11 +556,7 @@ class ManagerApp {
         body: JSON.stringify({ scope: "active" })
       });
 
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || response.statusText);
-      }
+      const payload = await this.readApiJson(response);
 
       let generatedCount = this.generated.length;
 
@@ -504,13 +564,9 @@ class ManagerApp {
         const generateResponse = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prune: false })
+          body: JSON.stringify({ prune: false, manifestKeyMode: this.getManifestKeyMode() })
         });
-        const generatePayload = await generateResponse.json();
-
-        if (!generateResponse.ok) {
-          throw new Error(generatePayload.error || generateResponse.statusText);
-        }
+        const generatePayload = await this.readApiJson(generateResponse);
 
         generatedCount = generatePayload.generated.length;
       }
@@ -536,8 +592,13 @@ class ManagerApp {
 
   async confirmGenerate(count) {
     const confirmKey = this.pruneCheckbox.checked ? "confirm.generatePrune" : "confirm.generate";
-    const message = this.i18n.t(confirmKey, { count });
+    const modeKey = this.getManifestKeyMode() === "include" ? "confirm.modeInclude" : "confirm.modeOmit";
+    const message = this.i18n.t(confirmKey, { count }) + this.i18n.t(modeKey);
 
+    return this.confirmAction(message);
+  }
+
+  async confirmAction(message) {
     if (!this.generateConfirmDialog || typeof this.generateConfirmDialog.showModal !== "function") {
       return window.confirm(message);
     }
@@ -567,20 +628,20 @@ class ManagerApp {
     try {
       await this.putConfig({
         count: Number(this.countInput.value),
+        manifestKeyMode: this.getManifestKeyMode(),
         shortcuts: this.collectShortcuts()
       });
 
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prune: this.pruneCheckbox.checked })
+        body: JSON.stringify({
+          prune: this.pruneCheckbox.checked,
+          manifestKeyMode: this.getManifestKeyMode()
+        })
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || response.statusText);
-      }
+      const result = await this.readApiJson(response);
 
       let message = this.i18n.t("status.generated", { count: result.generated.length });
 
@@ -600,6 +661,7 @@ class ManagerApp {
   exportConfig() {
     const payload = {
       count: this.config.count,
+      manifestKeyMode: this.getManifestKeyMode(),
       shortcuts: this.collectShortcuts()
     };
 
@@ -629,11 +691,15 @@ class ManagerApp {
         update.count = parsed.count;
       }
 
+      if (parsed.manifestKeyMode !== undefined) {
+        update.manifestKeyMode = parsed.manifestKeyMode;
+      }
+
       if (parsed.shortcuts !== undefined) {
         update.shortcuts = parsed.shortcuts;
       }
 
-      if (update.count === undefined && update.shortcuts === undefined) {
+      if (update.count === undefined && update.manifestKeyMode === undefined && update.shortcuts === undefined) {
         throw new Error(this.i18n.t("status.invalidImport"));
       }
 

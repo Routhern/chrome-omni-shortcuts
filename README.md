@@ -10,21 +10,21 @@ chrome-omni-shortcuts는 자주 여는 웹사이트를 Chrome 툴바 버튼으�
 - 확장별 대상 URL 저장
 - 대상 사이트의 favicon을 가져와 확장 아이콘으로 사용
 - favicon을 찾지 못해도 사이트명 기반 기본 아이콘 자동 생성
-- Chrome 재시작 직후에도 보이는 번호 기반 기본 PNG 아이콘 포함
+- Chrome 재시작 직후에도 보이는 공통 SVG 기본 아이콘 포함
 - 별도 빌드 없이 Chrome에서 바로 로드 가능
 
 ## 설치하기 — 확장 로드와 핀 고정
 
-Chrome 보안 정책상 압축해제 확장의 설치와 툴바 핀 고정은 자동화할 수 없어 직접 해야 합니다. 다행히 **처음 한 번만 하면 됩니다.** manifest key로 확장 ID가 고정되어 있으면, 이후 매니저에서 URL을 바꾸고 재생성해도 Chrome은 같은 확장으로 인식하므로 다시 설치하거나 핀을 다시 박을 필요가 없습니다.
+Chrome 보안 정책상 압축해제 확장의 설치와 툴바 핀 고정은 자동화할 수 없어 직접 해야 합니다. 다행히 **처음 한 번만 하면 됩니다.** 현재 기본 생성 모드는 manifest key를 생략하는 **로컬 안전 모드**입니다. 이 모드는 이 PC의 Chrome 프로필에서 압축해제 확장이 재시작 후 사라지던 문제를 피하기 위한 권장값입니다.
 
 이 환경에서는 Chrome 명령줄의 `--load-extension`으로 여러 `shortcut-*` 폴더를 한 번에 영구 등록하는 방식이 안정적이지 않았습니다. 실제 설치는 `chrome://extensions`에서 각 폴더를 하나씩 **압축해제된 확장 프로그램으로 로드**하는 방식을 기준으로 합니다.
 
 재시작 후 확장이 사라지는 문제의 원인 분석과 복구 기록은 `docs/TROUBLESHOOTING.md`에 정리되어 있습니다.
 
-Chrome이 manifest key가 있는 압축해제 확장을 거부하는 환경에서는 로컬 호환 모드로 생성 결과물의 `key` 필드를 뺄 수 있습니다. 이 경우 같은 PC의 같은 폴더에서는 숏컷 기능을 그대로 사용할 수 있지만, Windows/macOS 간 동일 확장 ID 고정은 포기합니다.
+Chrome이 manifest key가 있는 압축해제 확장을 거부하는 환경에서는 로컬 안전 모드로 생성 결과물의 `key` 필드를 뺍니다. 이 경우 같은 PC의 같은 폴더에서는 숏컷 기능을 그대로 사용할 수 있지만, Windows/macOS 간 동일 확장 ID 고정은 포기합니다.
 
 ```powershell
-node scripts\generate-extensions.js --no-manifest-key
+node scripts\generate-extensions.js
 ```
 
 ### 1단계: 확장 로드
@@ -60,7 +60,7 @@ URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 �
 
 키가 정상인데도 Chrome을 껐다 켤 때 확장이 언로드된다면, `chrome://extensions`에서 개발자 모드가 켜져 있는지 먼저 확인하세요. 그래도 반복되면 `docs/TROUBLESHOOTING.md`의 확장 등록부 복구 절차를 참고합니다.
 
-확장이 로드되면 우선 번호가 들어간 기본 PNG 아이콘이 표시되고, 서비스 워커가 실행되면 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
+확장이 로드되면 우선 공통 SVG 기본 아이콘이 표시되고, 서비스 워커가 실행되면 대상 사이트의 favicon으로 자동으로 바뀝니다. 사이트에서 favicon을 찾지 못하면 사이트명 첫 글자를 사용한 기본 아이콘이 자동으로 만들어집니다.
 
 URL은 `http://` 또는 `https://` 주소만 저장할 수 있습니다.
 
@@ -88,13 +88,14 @@ node scripts\manager.js
 실행하면 `http://127.0.0.1:8151`이 브라우저에서 열립니다. 매니저에서 다음을 할 수 있습니다.
 
 - 숏컷 패키지 개수 변경과 재생성 (prune 옵션 포함)
+- 로컬 안전 모드(권장)와 고정 ID 모드 선택
 - 숏컷별 이름·대상 URL·manifest key를 중앙 JSON(`config/extensions.json`)에서 편집
 - 저장된 URL 목록을 favicon과 함께 한눈에 탐색하고 바로 열기
-- Chrome 재시작 직후에도 보이는 기본 PNG 아이콘 자동 생성
+- Chrome 재시작 직후에도 보이는 공통 SVG 기본 아이콘 포함
 - 설정 전체를 JSON 파일로 내보내기/가져오기 (백업, 기기 간 이전)
 - 라이트/다크 테마 전환, 영어/한국어 UI 전환
 
-manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS에서 같은 확장으로 인식되고, `chrome.storage.sync` 데이터가 기기 간에 연동됩니다. key는 base64 공개키여야 하며(32자 확장 ID가 아님), 매니저의 `키 생성` 버튼으로 만들 수 있습니다. 잘못된 key가 들어가면 Chrome 재시작 시 확장이 로드에 실패해 목록에서 사라지므로 주의하세요. 매니저에 저장한 URL은 생성된 패키지에 기본 대상 URL로 주입됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
+고정 ID 모드에서 manifest key를 지정하면 Chrome 확장 ID가 고정되어 Windows와 macOS에서 같은 확장으로 인식되고, `chrome.storage.sync` 데이터가 기기 간에 연동됩니다. key는 base64 공개키여야 하며(32자 확장 ID가 아님), 매니저의 `키 생성` 버튼으로 만들 수 있습니다. 잘못된 key, 누락 key, 중복 ID가 있으면 매니저가 생성 전에 막습니다. 매니저에 저장한 URL은 생성된 패키지에 기본 대상 URL로 주입됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
 
 매니저는 key를 저장할 때 SPKI/RSA/2048비트 이상을 검증하고, 중복 확장 ID를 key 감사에서 탐지합니다.
 

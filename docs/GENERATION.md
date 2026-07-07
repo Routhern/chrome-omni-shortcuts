@@ -21,7 +21,7 @@ scripts/
   generate-extensions.js
 extensions/
   shortcut-01/
-    icons/
+    icon.svg
   shortcut-02/
   ...
 ```
@@ -32,7 +32,7 @@ extensions/
 - `extensions/shortcut-*`: Chrome에 실제로 로드하거나 배포할 결과물입니다. **직접 수정하지 마세요** — 재생성 시 덮어써집니다.
 
 패키지 디렉터리와 표시 이름은 두 자리 번호를 사용합니다(`shortcut-01`, `Omni-Shortcut 01`).
-각 패키지는 `icons/icon-16.png`, `icons/icon-24.png`, `icons/icon-32.png`, `icons/icon-48.png`, `icons/icon-128.png`를 함께 포함합니다. 이 기본 PNG 아이콘은 Chrome 시작 직후와 확장 관리 화면에서 표시되고, 런타임에는 대상 사이트 favicon으로 교체될 수 있습니다.
+각 패키지는 템플릿에서 복사된 `icon.svg`를 함께 포함합니다. 이 공통 SVG 기본 아이콘은 Chrome 시작 직후와 확장 관리 화면에서 표시되고, 런타임에는 대상 사이트 favicon으로 교체될 수 있습니다.
 
 ## 생성하기
 
@@ -56,19 +56,28 @@ node scripts\generate-extensions.js --count 7 --prune
 
 `--prune`은 `extensions/shortcut-N` 형식의 디렉터리만 대상으로 합니다.
 
-Chrome 프로필이 manifest key가 있는 압축해제 확장을 거부하는 경우, 로컬 호환 모드로 key 필드를 빼고 생성할 수 있습니다.
+기본값은 `config/extensions.json`의 `manifestKeyMode`를 따릅니다. 현재 기본은 로컬 안전 모드(`omit`)라서 생성된 manifest에서 `key` 필드를 생략합니다.
+
+```powershell
+node scripts\generate-extensions.js
+```
+
+명령줄에서 임시로 모드를 바꿀 수도 있습니다.
 
 ```powershell
 node scripts\generate-extensions.js --no-manifest-key
+node scripts\generate-extensions.js --with-manifest-key
+node scripts\generate-extensions.js --manifest-key-mode include
 ```
 
-이 옵션은 생성 결과물의 manifest에서만 key를 생략합니다. `config/extensions.json`의 `shortcuts[digit].key` 값은 보존됩니다.
+로컬 안전 모드는 생성 결과물의 manifest에서만 key를 생략합니다. `config/extensions.json`의 `shortcuts[digit].key` 값은 보존됩니다. 고정 ID 모드(`include`)는 활성 숏컷의 key가 모두 유효하고 중복 확장 ID가 없을 때만 생성됩니다.
 
 ## config/extensions.json 규격
 
 ```json
 {
   "count": 9,
+  "manifestKeyMode": "omit",
   "start": 1,
   "directoryTemplate": "shortcut-{digit}",
   "nameTemplate": "Omni-Shortcut {digit}",
@@ -81,10 +90,11 @@ node scripts\generate-extensions.js --no-manifest-key
 ```
 
 - `count`/`start`: `start`부터 `count`개의 패키지를 생성합니다.
+- `manifestKeyMode`: `omit`이면 생성된 manifest에서 key를 생략하고, `include`이면 숏컷별 key를 검증한 뒤 manifest에 주입합니다.
 - `*Template`: `{digit}` 토큰이 두 자리 번호로 치환되는 문구 템플릿입니다.
 - `shortcuts[digit]`: 숏컷별 설정입니다.
   - `url`: 생성 시 `background.js`의 `DEFAULT_TARGET_URL` 상수로 주입됩니다.
-  - `key`: manifest의 `key` 필드로 주입되는 base64 공개키(SPKI)입니다. 비어 있으면 `key` 필드를 넣지 않습니다.
+  - `key`: 고정 ID 모드에서 manifest의 `key` 필드로 주입되는 base64 공개키(SPKI)입니다. 로컬 안전 모드에서는 보관만 하고 생성물에는 넣지 않습니다.
   - `label`: 매니저 UI 표시용 이름입니다. 생성 결과물에는 들어가지 않습니다.
 
 ## 문구 템플릿
@@ -103,7 +113,8 @@ Omni-Shortcut의 아이콘 캐시는 `chrome.storage.local`에 저장되고, URL
 
 권장 방식:
 
-- `config/extensions.json`의 `shortcuts[digit].key`에 base64 공개키를 등록해 ID를 고정합니다. 키는 매니저의 `키 생성` 버튼(또는 `POST /api/keygen`)으로 만들 수 있습니다.
+- 로컬 압축해제 확장 사용 중 Chrome 프로필 등록부/동기화 꼬임이 있었던 환경에서는 `manifestKeyMode: "omit"`를 유지합니다.
+- 여러 기기에서 같은 확장 ID가 반드시 필요하면 `manifestKeyMode: "include"`로 바꾸고, `config/extensions.json`의 `shortcuts[digit].key`에 base64 공개키를 등록해 ID를 고정합니다. 키는 매니저의 `키 생성` 버튼(또는 `POST /api/keygen`)으로 만들 수 있습니다.
 - Chrome Web Store에 배포하는 경우 스토어가 부여한 안정적인 확장 ID를 사용합니다.
 
 **주의**: `key`는 base64 공개키이지 32자 확장 ID가 아닙니다. 잘못된 key가 주입되면 Chrome 재시작 시 확장이 로드에 실패해 목록에서 제거됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.

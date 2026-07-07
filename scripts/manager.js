@@ -27,6 +27,7 @@ const mimeTypes = {
 const urlPattern = /^https?:\/\//i;
 const extensionIdPattern = /^[a-p]{32}$/;
 const strictBase64Pattern = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+const manifestKeyModes = new Set(["omit", "include"]);
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
@@ -53,6 +54,38 @@ function readBody(request) {
     request.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
     request.on("error", reject);
   });
+}
+
+async function readJsonBody(request, fallback = {}) {
+  const raw = await readBody(request);
+
+  if (!raw.trim()) {
+    return fallback;
+  }
+
+  const parsed = JSON.parse(raw);
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("Request body must be a JSON object.");
+  }
+
+  return parsed;
+}
+
+function normalizeManifestKeyMode(mode) {
+  if (mode === undefined || mode === null || mode === "") {
+    return "omit";
+  }
+
+  if (!manifestKeyModes.has(mode)) {
+    throw new Error("manifestKeyMode must be either omit or include.");
+  }
+
+  return mode;
+}
+
+function isLocalSafeMode(config) {
+  return normalizeManifestKeyMode(config?.manifestKeyMode) === "omit";
 }
 
 function extensionIdFromKey(spkiDer) {
@@ -128,11 +161,12 @@ function generateManifestKey() {
   };
 }
 
-function validateShortcuts(shortcuts) {
+function validateShortcuts(shortcuts, options = {}) {
   if (typeof shortcuts !== "object" || shortcuts === null || Array.isArray(shortcuts)) {
     throw new Error("shortcuts must be an object keyed by digit.");
   }
 
+  const requireValidKeys = normalizeManifestKeyMode(options.manifestKeyMode) === "include";
   const sanitized = {};
 
   for (const [digit, entry] of Object.entries(shortcuts)) {
@@ -148,7 +182,7 @@ function validateShortcuts(shortcuts) {
       throw new Error(`Shortcut ${digit}: URL must start with http:// or https://`);
     }
 
-    if (key) {
+    if (key && requireValidKeys) {
       const parsed = assertValidManifestKey(key, `Shortcut ${digit}`);
       sanitized[digit] = { label, url, key: parsed.normalizedKey };
       continue;
@@ -188,6 +222,7 @@ function getManagedDigits(config, scope = "active") {
 
 function buildKeyAudit(config, options = {}) {
   const scope = options.scope === "all" ? "all" : "active";
+  const localSafeMode = isLocalSafeMode(config);
   const digits = getManagedDigits(config, scope);
   const items = [];
   const idToIndexes = new Map();
@@ -207,6 +242,14 @@ function buildKeyAudit(config, options = {}) {
       extensionId: "",
       duplicateWith: []
     };
+
+    if (localSafeMode) {
+      item.isValid = true;
+      item.issueCode = "OMITTED";
+      item.issue = "Manifest key is omitted in local safe mode.";
+      items.push(item);
+      continue;
+    }
 
     if (!key) {
       items.push(item);
@@ -259,13 +302,23 @@ function buildKeyAudit(config, options = {}) {
     duplicate: items.filter((item) => item.issueCode === "DUPLICATE_ID").length
   };
 
-  summary.actionNeeded = summary.missing + summary.invalid + summary.duplicate;
+  summary.omitted = items.filter((item) => item.issueCode === "OMITTED").length;
+  summary.actionNeeded = localSafeMode ? 0 : summary.missing + summary.invalid + summary.duplicate;
 
   return { summary, items };
 }
 
 function autoFixManifestKeys(config, options = {}) {
   const scope = options.scope === "all" ? "all" : "active";
+
+  if (isLocalSafeMode(config)) {
+    return {
+      config,
+      updated: [],
+      audit: buildKeyAudit(config, { scope })
+    };
+  }
+
   const digits = getManagedDigits(config, scope);
   const shortcuts = { ...(config.shortcuts || {}) };
   const usedIds = new Set();
@@ -332,6 +385,12 @@ function autoFixManifestKeys(config, options = {}) {
 function applyConfigUpdate(update) {
   const config = readConfig();
 
+  if (update.manifestKeyMode !== undefined) {
+    config.manifestKeyMode = normalizeManifestKeyMode(update.manifestKeyMode);
+  } else {
+    config.manifestKeyMode = normalizeManifestKeyMode(config.manifestKeyMode);
+  }
+
   if (update.count !== undefined) {
     const count = Number(update.count);
 
@@ -343,11 +402,22 @@ function applyConfigUpdate(update) {
   }
 
   if (update.shortcuts !== undefined) {
-    config.shortcuts = validateShortcuts(update.shortcuts);
+    config.shortcuts = validateShortcuts(update.shortcuts, { manifestKeyMode: config.manifestKeyMode });
   }
 
   writeConfig(config);
   return config;
+}
+
+function assertKeyAuditClean(config) {
+  const audit = buildKeyAudit(config, { scope: "active" });
+
+  if (audit.summary.actionNeeded > 0) {
+    throw new Error(
+      "Manifest key issues must be fixed before generating in fixed ID mode. " +
+        `Missing: ${audit.summary.missing}, invalid: ${audit.summary.invalid}, duplicate: ${audit.summary.duplicate}.`
+    );
+  }
 }
 
 function serveStatic(requestPath, response) {
@@ -381,15 +451,22 @@ async function handleApi(request, response, pathname) {
   }
 
   if (pathname === "/api/config" && request.method === "PUT") {
-    const body = JSON.parse(await readBody(request));
+    const body = await readJsonBody(request);
     const config = applyConfigUpdate(body);
     sendJson(response, 200, { config });
     return;
   }
 
   if (pathname === "/api/generate" && request.method === "POST") {
-    const body = JSON.parse((await readBody(request)) || "{}");
-    const result = generateExtensions({ prune: body.prune === true });
+    const body = await readJsonBody(request);
+    const config = readConfig();
+    const manifestKeyMode = body.noManifestKey === true ? "omit" : normalizeManifestKeyMode(body.manifestKeyMode ?? config.manifestKeyMode);
+
+    if (manifestKeyMode === "include") {
+      assertKeyAuditClean({ ...config, manifestKeyMode });
+    }
+
+    const result = generateExtensions({ prune: body.prune === true, manifestKeyMode });
     sendJson(response, 200, result);
     return;
   }
@@ -400,7 +477,7 @@ async function handleApi(request, response, pathname) {
   }
 
   if (pathname === "/api/key-autofix" && request.method === "POST") {
-    const body = JSON.parse((await readBody(request)) || "{}");
+    const body = await readJsonBody(request);
     const fixed = autoFixManifestKeys(readConfig(), { scope: body.scope === "all" ? "all" : "active" });
     writeConfig(fixed.config);
     sendJson(response, 200, {

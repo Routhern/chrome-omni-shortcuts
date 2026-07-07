@@ -44,6 +44,20 @@
             <span data-i18n="count.prune">Remove extra shortcut-N directories (prune)</span>
           </label>
         </div>
+        <fieldset id="manifest-mode-fieldset">
+          <legend data-i18n="manifestMode.heading">Generation mode</legend>
+          <div class="mode-toggle" role="radiogroup" aria-label="Manifest key generation mode">
+            <label>
+              <input type="radio" name="manifest-key-mode" value="omit">
+              <span data-i18n="manifestMode.omit">Local safe mode (recommended)</span>
+            </label>
+            <label>
+              <input type="radio" name="manifest-key-mode" value="include">
+              <span data-i18n="manifestMode.include">Fixed ID mode</span>
+            </label>
+          </div>
+          <small id="manifest-mode-help"></small>
+        </fieldset>
         <footer>
           <button id="generate-button" data-i18n="count.generate">Save &amp; Generate</button>
           <small id="generated-status"></small>

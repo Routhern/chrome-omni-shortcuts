@@ -1,5 +1,6 @@
 {
   "count": 9,
+  "manifestKeyMode": "omit",
   "start": 1,
   "directoryTemplate": "shortcut-{digit}",
   "nameTemplate": "Omni-Shortcut {digit}",

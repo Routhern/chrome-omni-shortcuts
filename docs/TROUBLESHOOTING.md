@@ -32,9 +32,9 @@
 1. Chrome 창을 모두 닫습니다.
 2. 작업 관리자에 남은 `chrome.exe` 프로세스가 있으면 종료합니다.
 3. 확장 상태 캐시를 백업 후 초기화합니다. 로컬 작업용 스크립트는 `docs/dev/` 아래에 보관합니다.
-4. 로컬 호환 모드로 key 없는 결과물을 생성합니다.
+4. 로컬 안전 모드로 key 없는 결과물을 생성합니다. 현재 기본 설정은 `manifestKeyMode: "omit"`이므로 아래 명령만 실행하면 됩니다.
    ```powershell
-   node scripts\generate-extensions.js --no-manifest-key
+   node scripts\generate-extensions.js
    ```
 5. `chrome://extensions`에서 개발자 모드를 켭니다.
 6. `extensions/shortcut-01`부터 `extensions/shortcut-09`까지 각각 압축해제 확장으로 수동 로드합니다.
@@ -56,10 +56,10 @@
 
 `config/extensions.json`에는 여전히 각 숏컷의 manifest key가 저장될 수 있습니다. 이 key는 여러 기기에서 확장 ID를 고정하기 위한 값입니다.
 
-하지만 이번 환경에서는 key가 있는 압축해제 확장이 원래 프로필에서 안정적으로 유지되지 않았습니다. 그래서 로컬 호환 모드로 아래 명령을 사용했습니다.
+하지만 이번 환경에서는 key가 있는 압축해제 확장이 원래 프로필에서 안정적으로 유지되지 않았습니다. 그래서 기본 생성 모드를 `manifestKeyMode: "omit"`로 두고, 생성된 manifest에서는 key를 생략합니다.
 
 ```powershell
-node scripts\generate-extensions.js --no-manifest-key
+node scripts\generate-extensions.js
 ```
 
-이 모드는 생성된 `extensions/shortcut-*`의 manifest에서만 key를 생략합니다. `config/extensions.json`의 key 값은 보존되므로, 나중에 일반 생성으로 되돌릴 수 있습니다.
+이 모드는 생성된 `extensions/shortcut-*`의 manifest에서만 key를 생략합니다. `config/extensions.json`의 key 값은 보존되므로, 나중에 `manifestKeyMode: "include"` 또는 `--with-manifest-key`로 되돌릴 수 있습니다. 고정 ID 모드에서는 생성기가 key 누락, 잘못된 SPKI/RSA 공개키, 중복 확장 ID를 생성 전에 막습니다.

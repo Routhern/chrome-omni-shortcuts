@@ -1,19 +1,49 @@
 // Injected by scripts/generate-extensions.js from config/extensions.json shortcuts[digit].url
 const DEFAULT_TARGET_URL = "https://www.deepl.com/en/translator";
+const DEFAULT_FALLBACK_URL = "chrome://newtab";
+
+function isHttpUrl(value) {
+  if (typeof value !== "string" || !value.trim()) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (error) {
+    return false;
+  }
+}
+
+function getSafeTargetUrl(value) {
+  return isHttpUrl(value) ? value.trim() : DEFAULT_FALLBACK_URL;
+}
 
 class StorageManager {
   static async getTargetUrl() {
-    if (DEFAULT_TARGET_URL) {
-      return DEFAULT_TARGET_URL;
+    if (isHttpUrl(DEFAULT_TARGET_URL)) {
+      return DEFAULT_TARGET_URL.trim();
     }
 
     // Legacy fallback: URLs saved through the removed options page.
-    const data = await chrome.storage.sync.get("targetUrl");
-    return data.targetUrl || "chrome://newtab";
+    try {
+      const data = await chrome.storage.sync.get("targetUrl");
+      return getSafeTargetUrl(data?.targetUrl);
+    } catch (error) {
+      console.warn("Could not read legacy targetUrl. Using new tab fallback:", error);
+      return DEFAULT_FALLBACK_URL;
+    }
   }
 
   static async getCachedIcon() {
-    const data = await chrome.storage.local.get(["iconUrl", "iconPixels"]);
+    let data = null;
+
+    try {
+      data = await chrome.storage.local.get(["iconUrl", "iconPixels"]);
+    } catch (error) {
+      console.warn("Could not read cached icon:", error);
+      return null;
+    }
 
     if (data.iconUrl && Array.isArray(data.iconPixels) && data.iconPixels.length === 32 * 32 * 4) {
       return data;
@@ -23,10 +53,18 @@ class StorageManager {
   }
 
   static async setCachedIcon(iconUrl, imageData) {
-    await chrome.storage.local.set({
-      iconUrl,
-      iconPixels: Array.from(imageData.data)
-    });
+    if (!imageData?.data) {
+      return;
+    }
+
+    try {
+      await chrome.storage.local.set({
+        iconUrl,
+        iconPixels: Array.from(imageData.data)
+      });
+    } catch (error) {
+      console.warn("Could not store cached icon:", error);
+    }
   }
 }
 
@@ -63,7 +101,7 @@ class FaviconManager {
   }
 
   static drawFallbackIcon(ctx, targetUrl) {
-    const hostname = new URL(targetUrl).hostname;
+    const hostname = this.getHostname(targetUrl);
     const label = this.getFallbackLabel(hostname);
     const hue = this.hashString(hostname) % 360;
     const gradient = ctx.createLinearGradient(0, 0, 32, 32);
@@ -82,6 +120,14 @@ class FaviconManager {
     ctx.fillText(label, 16, 17);
   }
 
+  static getHostname(targetUrl) {
+    try {
+      return new URL(targetUrl).hostname || "shortcut";
+    } catch (error) {
+      return "shortcut";
+    }
+  }
+
   static getFallbackLabel(hostname) {
     return hostname
       .replace(/^www\./i, "")
@@ -98,6 +144,10 @@ class FaviconManager {
   static async renderIcon(targetUrl) {
     const canvas = new OffscreenCanvas(32, 32);
     const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Could not create icon canvas context");
+    }
 
     try {
       const bitmap = await this.fetchIconBitmap(targetUrl);
@@ -123,12 +173,12 @@ class IconManager {
       const cached = await StorageManager.getCachedIcon();
 
       if (cached && cached.iconUrl === targetUrl) {
-        this.applyPixels(cached.iconPixels);
+        await this.applyPixels(cached.iconPixels);
         return;
       }
 
       const imageData = await FaviconManager.renderIcon(targetUrl);
-      chrome.action.setIcon({ imageData });
+      await chrome.action.setIcon({ imageData });
       await StorageManager.setCachedIcon(targetUrl, imageData);
     } catch (error) {
       console.error("Error refreshing icon:", error);
@@ -136,15 +186,23 @@ class IconManager {
   }
 
   static applyPixels(iconPixels) {
+    if (!Array.isArray(iconPixels) || iconPixels.length !== 32 * 32 * 4) {
+      return;
+    }
+
     const imageData = new ImageData(new Uint8ClampedArray(iconPixels), 32, 32);
-    chrome.action.setIcon({ imageData });
+    return chrome.action.setIcon({ imageData });
   }
 }
 
 class TabManager {
   static async openTargetUrl() {
-    const targetUrl = await StorageManager.getTargetUrl();
-    chrome.tabs.update({ url: targetUrl });
+    try {
+      const targetUrl = await StorageManager.getTargetUrl();
+      await chrome.tabs.update({ url: targetUrl });
+    } catch (error) {
+      console.error("Error opening target URL:", error);
+    }
   }
 }
 
