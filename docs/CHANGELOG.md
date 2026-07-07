@@ -47,7 +47,9 @@
 
 ### Changed
 
+- Windows용 추가 런처 `Open-Manager.vbs` 추가 (명령창 없이 백그라운드에서 매니저 실행)
 - README의 확장 이름 표기(두 자리 번호)와 프로젝트 구조(패키지 9개, `icon.svg` 포함)를 현재 저장소 상태에 맞게 갱신
+- README에 Windows용 VBS 런처 옵션 추가
 - `docs/dev/` 디렉터리를 로컬 개발 문서 영역으로 분리하고 `.gitignore`에 등록
 - 스킴이 없는 사용자 입력 URL을 `https://`로 자동 보정하도록 변경
 - favicon 저장 로직을 단일 endpoint 의존 방식에서 다중 후보 탐색 방식으로 변경

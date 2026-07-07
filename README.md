@@ -51,7 +51,7 @@ URL 변경은 숏컷 매니저에서 하고, 재생성 후 `chrome://extensions`
 
 URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 페이지는 제거되었습니다.)
 
-1. 숏컷 매니저를 엽니다. Windows에서는 `Open-Manager.bat`, macOS에서는 `open-manager.command`를 더블클릭하거나, 터미널에서 `node scripts\manager.js`를 실행합니다.
+1. 숏컷 매니저를 엽니다. Windows에서는 `Open-Manager.vbs` 또는 `Open-Manager.bat`를 더블클릭하고, macOS에서는 `open-manager.command`를 더블클릭하거나, 터미널에서 `node scripts\manager.js`를 실행합니다.
 2. 원하는 숏컷의 대상 URL을 입력하고 `Save & Generate`를 누른 뒤, 페이지 안의 확인 창에서 생성 여부를 확인합니다.
 3. Chrome 확장 관리 화면에서 해당 확장을 새로고침(또는 새로 로드)합니다.
 4. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
@@ -79,7 +79,7 @@ Chrome에 여러 디렉터리를 각각 로드하면 툴바에 여러 바로가�
 
 ## 숏컷 매니저 (GUI)
 
-CLI 생성 스크립트 대신 브라우저 기반 GUI로 숏컷을 관리할 수 있습니다. Windows에서는 저장소 루트의 `Open-Manager.bat`, macOS에서는 `open-manager.command`를 더블클릭하면 됩니다. 터미널에서는 다음 명령을 사용합니다.
+CLI 생성 스크립트 대신 브라우저 기반 GUI로 숏컷을 관리할 수 있습니다. Windows에서는 저장소 루트의 `Open-Manager.vbs` 또는 `Open-Manager.bat`를 더블클릭하고, macOS에서는 `open-manager.command`를 더블클릭하면 됩니다. 터미널에서는 다음 명령을 사용합니다.
 
 ```powershell
 node scripts\manager.js
@@ -111,6 +111,7 @@ node scripts\manager.js
 
 ```text
 chrome-omni-shortcuts/
+  Open-Manager.vbs
   Open-Manager.bat
   open-manager.command
   extensions/
