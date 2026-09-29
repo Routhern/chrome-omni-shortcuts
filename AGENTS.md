@@ -22,14 +22,14 @@ chrome-omni-shortcuts는 여러 개의 독립적인 Chrome 확장 프로그램 �
 ## 작업 원칙
 
 1. 기존 `shortcut-*` 패키지 간 동작을 동일하게 유지합니다.
-2. 공통 동작을 수정할 때는 `src/extension-template/`를 먼저 수정하고 매니저에서 **Save & Generate**를 실행합니다.
+2. 공통 동작을 수정할 때는 `src/extension-template/`를 먼저 수정하고 매니저에서 **Save & Generate**를 실행합니다. `extensions/shortcut-*`의 생성 파일은 직접 수정하지 않으며, **Save & Generate** 시 덮어써집니다. 생성 결과물은 템플릿 변경과 함께 커밋합니다.
 3. Chrome 확장 권한을 추가할 때는 `README.md`와 `docs/ARCHITECTURE.md`에 이유를 문서화합니다.
-4. 사용자에게 보이는 문구나 옵션 흐름을 바꾸면 README 사용 절차도 갱신합니다.
+4. 사용자에게 보이는 문구나 매니저의 설정 흐름을 바꾸면 README 사용 절차도 갱신합니다.
 5. 변경 이력은 `docs/CHANGELOG.md`에 Keep a Changelog 형식으로 기록합니다.
 
 ## 개발 및 검증
 
-별도의 빌드나 패키지 매니저는 없습니다. 회귀 검사는 Chrome에서 `tests/browser.html`을 열고 테스트용 임시 폴더를 선택해 실행합니다. 실제 확장 동작은 Chrome의 확장 관리 페이지에서 각 `extensions/shortcut-*` 디렉터리를 압축해제 로드해 확인합니다.
+별도의 빌드나 패키지 매니저는 없습니다. 회귀 검사는 Chrome에서 `tests/browser.html`을 열고 테스트용 임시 폴더를 선택해 실행합니다. 변경 후 최소 1개의 shortcut 패키지를 로드해 확인하고, 공통 동작 변경 시 서로 다른 번호의 패키지 2개 이상을 확인합니다.
 
 확장 결과물을 다시 만드는 방법:
 
