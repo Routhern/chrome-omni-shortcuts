@@ -1,4 +1,5 @@
-{
+globalThis.MANAGER_MESSAGES ??= {};
+globalThis.MANAGER_MESSAGES.ko = {
   "app.title": "크롬 Omni-Shortcuts 매니저",
   "theme.auto": "테마: 자동",
   "theme.light": "테마: 라이트",
@@ -69,5 +70,7 @@
   "status.loading": "불러오는 중…",
   "status.exported": "설정을 내보냈습니다.",
   "status.imported": "설정을 가져와 저장했습니다.",
-  "status.invalidImport": "잘못된 파일: count 또는 shortcuts가 있는 JSON 객체여야 합니다."
-}
+  "status.invalidImport": "잘못된 파일: count 또는 shortcuts가 있는 JSON 객체여야 합니다.",
+  "workspace.select": "프로젝트 폴더 선택",
+  "workspace.help": "Chrome에서 프로젝트 폴더를 선택하고 파일 편집을 허용하세요."
+};

@@ -8,69 +8,19 @@ Chrome은 하나의 확장 프로그램에서 여러 개의 독립 툴바 버튼
 
 현재 기본 생성 개수는 9개이며, 1개부터 64개까지 조정할 수 있습니다.
 
-일상적인 관리(URL·이름·key 편집, 재생성)는 GUI 숏컷 매니저(`docs/MANAGER.md`)를 사용하는 것이 편합니다. 이 문서의 CLI는 매니저가 내부적으로 재사용하는 저수준 도구입니다.
-
-## 관리 구조
-
-```text
-config/
-  extensions.json
-src/
-  extension-template/
-scripts/
-  generate-extensions.js
-extensions/
-  shortcut-01/
-    icon.svg
-  shortcut-02/
-  ...
-```
-
-- `src/extension-template/`: 공통 확장 원본입니다.
-- `config/extensions.json`: 생성 개수, 번호별 문구 템플릿, 숏컷별 `label`/`url`/`key`를 관리합니다.
-- `scripts/generate-extensions.js`: 템플릿과 설정을 읽어 `extensions/shortcut-*` 결과물을 생성합니다. CLI이자 매니저 서버가 require하는 모듈입니다.
-- `extensions/shortcut-*`: Chrome에 실제로 로드하거나 배포할 결과물입니다. **직접 수정하지 마세요** — 재생성 시 덮어써집니다.
-
-패키지 디렉터리와 표시 이름은 두 자리 번호를 사용합니다(`shortcut-01`, `Omni-Shortcut 01`).
-각 패키지는 템플릿에서 복사된 `icon.svg`를 함께 포함합니다. 이 공통 SVG 기본 아이콘은 Chrome 시작 직후와 확장 관리 화면에서 표시되고, 런타임에는 대상 사이트 favicon으로 교체될 수 있습니다.
-
 ## 생성하기
 
-기본 설정(`config/extensions.json`의 `count`)만큼 생성합니다.
+1. Chrome에서 `src/manager/index.html`을 엽니다.
+2. **프로젝트 폴더 선택**에서 저장소 루트를 선택하고 파일 편집을 허용합니다.
+3. 개수(1~64), URL, 생성 모드를 설정하고 **Save & Generate**를 누릅니다.
+4. 필요하면 prune을 켭니다. 생성 대상에서 빠진 `extensions/shortcut-숫자` 폴더만 삭제합니다.
+5. Chrome 확장 관리 페이지에서 해당 확장을 새로고침합니다.
 
-```powershell
-node scripts\generate-extensions.js
-```
+Node.js와 CLI 생성기는 제거되었습니다. `src/manager/workspace.js`가 브라우저의 File System Access API로 `config/extensions.json`과 `src/extension-template/`을 읽고 기존 `extensions/shortcut-*` 경로에 직접 씁니다. 설정 및 모든 생성 manifest를 검증한 뒤 패키지를 기록합니다. 파일 쓰기는 파일별로 이루어지므로 도중에 권한 취소나 디스크 오류가 나면 다시 생성하세요.
 
-임시로 다른 개수를 생성합니다. `--count`는 해당 실행에만 적용되고 config에 저장되지 않습니다.
+생성 결과물을 직접 수정하지 마세요. 공통 수정은 `src/extension-template/`에서 진행하고 매니저에서 재생성합니다. 기본 SVG 아이콘과 바이너리 파일도 복사됩니다.
 
-```powershell
-node scripts\generate-extensions.js --count 13
-```
-
-생성 개수를 줄이고 남는 `shortcut-*` 디렉터리까지 제거하려면 `--prune`을 명시합니다.
-
-```powershell
-node scripts\generate-extensions.js --count 7 --prune
-```
-
-`--prune`은 `extensions/shortcut-N` 형식의 디렉터리만 대상으로 합니다.
-
-기본값은 `config/extensions.json`의 `manifestKeyMode`를 따릅니다. 현재 기본은 로컬 안전 모드(`omit`)라서 생성된 manifest에서 `key` 필드를 생략합니다.
-
-```powershell
-node scripts\generate-extensions.js
-```
-
-명령줄에서 임시로 모드를 바꿀 수도 있습니다.
-
-```powershell
-node scripts\generate-extensions.js --no-manifest-key
-node scripts\generate-extensions.js --with-manifest-key
-node scripts\generate-extensions.js --manifest-key-mode include
-```
-
-로컬 안전 모드는 생성 결과물의 manifest에서만 key를 생략합니다. `config/extensions.json`의 `shortcuts[digit].key` 값은 보존됩니다. 고정 ID 모드(`include`)는 활성 숏컷의 key가 모두 유효하고 중복 확장 ID가 없을 때만 생성됩니다.
+로컬 안전 모드(`omit`)는 저장된 key를 보존하고 manifest에서만 생략합니다. 고정 ID 모드(`include`)는 활성 키가 유효하고 중복 ID가 없을 때만 생성합니다.
 
 ## config/extensions.json 규격
 
@@ -114,7 +64,7 @@ Omni-Shortcut의 아이콘 캐시는 `chrome.storage.local`에 저장되고, URL
 권장 방식:
 
 - 로컬 압축해제 확장 사용 중 Chrome 프로필 등록부/동기화 꼬임이 있었던 환경에서는 `manifestKeyMode: "omit"`를 유지합니다.
-- 여러 기기에서 같은 확장 ID가 반드시 필요하면 `manifestKeyMode: "include"`로 바꾸고, `config/extensions.json`의 `shortcuts[digit].key`에 base64 공개키를 등록해 ID를 고정합니다. 키는 매니저의 `키 생성` 버튼(또는 `POST /api/keygen`)으로 만들 수 있습니다.
+- 여러 기기에서 같은 확장 ID가 반드시 필요하면 `manifestKeyMode: "include"`로 바꾸고, `config/extensions.json`의 `shortcuts[digit].key`에 base64 공개키를 등록해 ID를 고정합니다. 키는 매니저의 `키 생성` 버튼으로 만들 수 있습니다.
 - Chrome Web Store에 배포하는 경우 스토어가 부여한 안정적인 확장 ID를 사용합니다.
 
 **주의**: `key`는 base64 공개키이지 32자 확장 ID가 아닙니다. 잘못된 key가 주입되면 Chrome 재시작 시 확장이 로드에 실패해 목록에서 제거됩니다. 자세한 내용은 `docs/MANAGER.md`를 참고하세요.
@@ -122,6 +72,6 @@ Omni-Shortcut의 아이콘 캐시는 `chrome.storage.local`에 저장되고, URL
 ## 작업 규칙
 
 - 공통 코드 변경은 `src/extension-template/`에서 먼저 수정합니다.
-- 수정 후 `node scripts\generate-extensions.js`를 실행합니다.
+- 수정 후 매니저에서 **Save & Generate**를 실행합니다.
 - `extensions/shortcut-*`를 직접 수정한 경우 템플릿과 다시 동기화해야 합니다.
 - 생성 개수를 영구히 바꿀 때는 `config/extensions.json`의 `count`를 수정합니다(매니저의 `저장 후 생성`이 같은 일을 합니다).

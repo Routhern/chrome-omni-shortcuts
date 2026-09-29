@@ -11,8 +11,7 @@ class I18n {
     this.language = LANGUAGES.includes(language) ? language : "en";
     localStorage.setItem("manager.language", this.language);
 
-    const response = await fetch(`i18n/${this.language}.json`);
-    this.messages = await response.json();
+    this.messages = MANAGER_MESSAGES[this.language];
 
     document.documentElement.lang = this.language;
     this.applyToDom();
@@ -98,7 +97,7 @@ class ManagerApp {
     this.languageSelect.addEventListener("change", async () => {
       await this.i18n.load(this.languageSelect.value);
       this.theme.apply();
-      this.render();
+      if (this.config) this.render();
     });
 
     document.getElementById("theme-toggle").addEventListener("click", () => this.theme.cycle());
@@ -111,7 +110,10 @@ class ManagerApp {
         this.setKeyAudit(null);
         this.updateManifestModeHelp();
         this.renderKeyAuditSummary();
-        this.renderShortcuts();
+        if (this.config) {
+          this.config.shortcuts = this.collectShortcuts();
+          this.renderShortcuts();
+        }
       });
     }
 
@@ -137,11 +139,24 @@ class ManagerApp {
       });
     }
 
-    await this.refreshState();
+    document.getElementById("workspace-select").addEventListener("click", async () => {
+      try {
+        await workspace.select();
+        await this.refreshState();
+        document.getElementById("workspace-controls").disabled = false;
+        this.showStatus(workspace.root.name, true);
+      } catch (error) {
+        if (error.name !== "AbortError") this.showStatus(error.message, false);
+      }
+    });
+    if (!window.showDirectoryPicker) {
+      document.getElementById("workspace-select").disabled = true;
+      this.showStatus("Chrome에서 이 파일을 열어 주세요. / Open this file in Chrome.", false);
+    }
   }
 
   async refreshState() {
-    const [stateResponse, auditResponse] = await Promise.all([fetch("/api/state"), fetch("/api/key-audit")]);
+    const [stateResponse, auditResponse] = await Promise.all([workspace.request("/api/state"), workspace.request("/api/key-audit")]);
     const state = await this.readApiJson(stateResponse);
     this.config = state.config;
     this.generated = state.generated;
@@ -285,13 +300,12 @@ class ManagerApp {
 
     row.querySelector(".generate-key").addEventListener("click", async () => {
       try {
-        const response = await fetch("/api/keygen", { method: "POST" });
+        const response = await workspace.request("/api/keygen", { method: "POST" });
         const payload = await this.readApiJson(response);
 
         keyInput.value = payload.key;
         keyFeedback.textContent = this.i18n.t("validate.keyOk", { id: payload.id });
         keyFeedback.classList.remove("is-error");
-        await this.refreshKeyAudit(false);
       } catch (error) {
         keyFeedback.textContent = this.i18n.t("status.error", { message: error.message });
         keyFeedback.classList.add("is-error");
@@ -393,23 +407,7 @@ class ManagerApp {
     }
 
     try {
-      const raw = atob(key);
-      const bytes = Uint8Array.from(raw, (character) => character.charCodeAt(0));
-
-      // 확장 ID 등 임의의 base64 문자열을 걸러내기 위해 실제 SPKI 공개키인지 확인한다.
-      await crypto.subtle.importKey(
-        "spki",
-        bytes,
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-        true,
-        ["verify"]
-      );
-
-      const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
-      const extensionId = [...hash.slice(0, 16)]
-        .map((byte) => byte.toString(16).padStart(2, "0"))
-        .join("")
-        .replace(/./g, (hex) => "abcdefghijklmnop"[parseInt(hex, 16)]);
+      const {id: extensionId} = await parseManifestKey(key);
 
       return { ok: true, message: this.i18n.t("validate.keyOk", { id: extensionId }) };
     } catch (error) {
@@ -492,7 +490,7 @@ class ManagerApp {
   }
 
   async putConfig(update) {
-    const response = await fetch("/api/config", {
+    const response = await workspace.request("/api/config", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(update)
@@ -522,9 +520,9 @@ class ManagerApp {
         this.auditKeysButton.setAttribute("aria-busy", "true");
       }
 
-      const response = await fetch("/api/key-audit");
-      const payload = await this.readApiJson(response);
+      const payload = {audit: await buildKeyAudit({...this.config, manifestKeyMode: this.getManifestKeyMode(), shortcuts: this.collectShortcuts()})};
 
+      this.config = {...this.config, manifestKeyMode: this.getManifestKeyMode(), shortcuts: this.collectShortcuts()};
       this.setKeyAudit(payload.audit);
       this.render();
 
@@ -550,10 +548,10 @@ class ManagerApp {
         this.autofixKeysButton.setAttribute("aria-busy", "true");
       }
 
-      const response = await fetch("/api/key-autofix", {
+      const response = await workspace.request("/api/key-autofix", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scope: "active" })
+        body: JSON.stringify({ scope: "active", manifestKeyMode: this.getManifestKeyMode(), shortcuts: this.collectShortcuts() })
       });
 
       const payload = await this.readApiJson(response);
@@ -561,7 +559,7 @@ class ManagerApp {
       let generatedCount = this.generated.length;
 
       if (payload.updated.length > 0) {
-        const generateResponse = await fetch("/api/generate", {
+        const generateResponse = await workspace.request("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prune: false, manifestKeyMode: this.getManifestKeyMode() })
@@ -632,7 +630,7 @@ class ManagerApp {
         shortcuts: this.collectShortcuts()
       });
 
-      const response = await fetch("/api/generate", {
+      const response = await workspace.request("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

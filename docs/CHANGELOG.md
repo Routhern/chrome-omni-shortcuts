@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Node.js 매니저 서버와 CLI 생성기를 제거하고 Chrome에서 직접 여는 로컬 HTML 매니저로 전환
+- 사용자가 선택한 프로젝트 폴더에 File System Access API로 설정 저장·확장 생성·prune 수행
+- Web Crypto로 RSA 키 생성·검증·중복 감사·자동복구 유지
+- 서버 없이 번역을 읽도록 i18n을 일반 JS 스크립트로 변경하고 Windows/macOS 런처와 문서 갱신
+- 키 생성 후 재렌더링으로 미저장 입력이 사라지던 문제 수정
+
 ### Added
 
 - 저장소 문서 초안 추가

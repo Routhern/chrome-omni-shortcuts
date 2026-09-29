@@ -1,4 +1,5 @@
-{
+globalThis.MANAGER_MESSAGES ??= {};
+globalThis.MANAGER_MESSAGES.en = {
   "app.title": "Chrome Omni-Shortcuts Manager",
   "theme.auto": "Theme: Auto",
   "theme.light": "Theme: Light",
@@ -69,5 +70,7 @@
   "status.loading": "Loading…",
   "status.exported": "Configuration exported.",
   "status.imported": "Configuration imported and saved.",
-  "status.invalidImport": "Invalid file: expected a JSON object with count and/or shortcuts."
-}
+  "status.invalidImport": "Invalid file: expected a JSON object with count and/or shortcuts.",
+  "workspace.select": "Select project folder",
+  "workspace.help": "In Chrome, select the project folder and allow file editing."
+};

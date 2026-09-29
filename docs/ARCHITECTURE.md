@@ -15,14 +15,13 @@ config/
   extensions.json
 src/
   extension-template/
-scripts/
-  generate-extensions.js
+  manager/workspace.js
 extensions/shortcut-N/
   manifest.json
   background.js
 ```
 
-패키지 디렉터리는 `shortcut-01`부터 두 자리 번호로 생성됩니다. 개수는 설정이나 생성 스크립트 인자로 1개부터 64개까지 조정할 수 있습니다.
+패키지 디렉터리는 `shortcut-01`부터 두 자리 번호로 생성됩니다. 개수는 설정이나 매니저 입력으로 1개부터 64개까지 조정할 수 있습니다.
 
 ## Chrome 확장 구성
 
@@ -46,8 +45,8 @@ extensions/shortcut-N/
 ### URL 설정
 
 1. 사용자가 숏컷 매니저에서 숏컷별 대상 URL을 입력하고 저장합니다.
-2. 매니저 서버가 URL을 검증(`http://`/`https://`만 허용)해 `config/extensions.json`의 `shortcuts[digit].url`에 기록합니다.
-3. 생성 스크립트가 URL을 각 패키지 `background.js`의 `DEFAULT_TARGET_URL` 상수로 주입합니다.
+2. 브라우저 매니저가 URL을 검증(`http://`/`https://`만 허용)해 `config/extensions.json`의 `shortcuts[digit].url`에 기록합니다.
+3. 매니저 생성기가 URL을 각 패키지 `background.js`의 `DEFAULT_TARGET_URL` 상수로 주입합니다.
 4. 사용자가 Chrome에서 해당 확장을 새로고침하면 새 URL이 반영됩니다.
 
 레거시 호환: `DEFAULT_TARGET_URL`이 비어 있으면 과거 옵션 페이지가 `chrome.storage.sync`에 저장했던 `targetUrl`을 fallback으로 읽습니다. 그것도 없으면 `chrome://newtab`을 사용합니다.
@@ -66,7 +65,7 @@ extensions/shortcut-N/
 
 ## URL 정책
 
-매니저에 저장할 수 있는 URL은 서버에서 검증합니다.
+매니저에 저장할 수 있는 URL은 브라우저에서 검증합니다.
 
 - `http://` 또는 `https://`로 시작해야 합니다.
 - 빈 값은 허용됩니다(해당 숏컷은 `chrome://newtab` 동작).
@@ -107,20 +106,20 @@ https://t0.gstatic.com/faviconV2
 
 - 모든 사이트 접근 권한인 `<all_urls>`는 사용하지 않습니다.
 - `activeTab` 권한은 현재 동작에 필요하지 않아 사용하지 않습니다.
-- URL 검증(`http`/`https` 스킴만 허용)은 매니저 서버에서 수행하고, `background.js`도 `http(s)` URL만 아이콘 조회 대상으로 삼습니다.
+- URL 검증(`http`/`https` 스킴만 허용)은 브라우저 매니저에서 수행하고, `background.js`도 `http(s)` URL만 아이콘 조회 대상으로 삼습니다.
 - favicon 조회는 `https://t0.gstatic.com/*` 범위에서만 시도하며, 실패하면 로컬에서 기본 아이콘을 생성합니다.
 - 아이콘 캐시는 `chrome.storage.local`에 저장합니다. `chrome.storage.sync`는 레거시 `targetUrl` fallback 용도로만 읽습니다.
 
 ## 변경 시 영향 범위
 
-공통 로직은 `src/extension-template/`에서 관리하고 `scripts/generate-extensions.js`로 모든 `shortcut-*` 디렉터리에 반영합니다. 특정 동작을 수정할 때는 템플릿의 다음 파일을 먼저 수정합니다.
+공통 로직은 `src/extension-template/`에서 관리하고 `src/manager/workspace.js`로 모든 `shortcut-*` 디렉터리에 반영합니다. 특정 동작을 수정할 때는 템플릿의 다음 파일을 먼저 수정합니다.
 
 - `background.js`
 - `manifest.json`
 
 확장 표시 이름, 설명, 툴바 제목, 생성 개수는 `config/extensions.json`에서 관리합니다. 확장 ID 고정용 manifest key도 이 설정 파일에서 번호별로 관리합니다.
 
-생성 스크립트는 템플릿의 `icon.svg`를 각 패키지에 함께 복사합니다. manifest의 `icons`와 `action.default_icon`은 모든 크기에서 이 공통 SVG를 참조합니다. 생성 직후 manifest 구조, icon 참조, 권한, manifest key 포함/생략 상태를 검증해 Chrome에 깨진 manifest가 넘어가지 않도록 합니다.
+매니저 생성기는 템플릿의 `icon.svg`를 각 패키지에 함께 복사합니다. manifest의 `icons`와 `action.default_icon`은 모든 크기에서 이 공통 SVG를 참조합니다. 생성 직후 manifest 구조, icon 참조, 권한, manifest key 포함/생략 상태를 검증해 Chrome에 깨진 manifest가 넘어가지 않도록 합니다.
 
 ## 향후 개선 후보
 

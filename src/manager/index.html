@@ -28,6 +28,11 @@
   </header>
 
   <main class="container">
+    <article>
+      <p data-i18n="workspace.help"></p>
+      <button id="workspace-select" data-i18n="workspace.select">Select project folder</button>
+    </article>
+    <fieldset id="workspace-controls" disabled>
     <section id="count-section">
       <article>
         <header data-i18n="count.heading">Package Count</header>
@@ -102,6 +107,7 @@
         </footer>
       </article>
     </section>
+    </fieldset>
   </main>
 
   <footer class="container">
@@ -153,6 +159,9 @@
     </tr>
   </template>
 
+  <script src="i18n/en.js"></script>
+  <script src="i18n/ko.js"></script>
+  <script src="workspace.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

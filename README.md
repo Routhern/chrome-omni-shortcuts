@@ -4,6 +4,8 @@ chrome-omni-shortcuts는 자주 여는 웹사이트를 Chrome 툴바 버튼으�
 
 이 저장소에는 `Omni-Shortcut 01`부터 `Omni-Shortcut 09`까지 9개의 독립 확장 패키지가 들어 있습니다. 각 확장마다 서로 다른 URL을 저장해 두면, Chrome 툴바에 여러 개의 개인 바로가기 버튼을 둘 수 있습니다.
 
+Node.js, npm, 로컬 서버 설치 없이 Chrome만으로 관리할 수 있습니다.
+
 ## 주요 기능
 
 - 툴바 버튼 클릭으로 저장된 URL 열기
@@ -23,9 +25,7 @@ Chrome 보안 정책상 압축해제 확장의 설치와 툴바 핀 고정은 �
 
 Chrome이 manifest key가 있는 압축해제 확장을 거부하는 환경에서는 로컬 안전 모드로 생성 결과물의 `key` 필드를 뺍니다. 이 경우 같은 PC의 같은 폴더에서는 숏컷 기능을 그대로 사용할 수 있지만, Windows/macOS 간 동일 확장 ID 고정은 포기합니다.
 
-```powershell
-node scripts\generate-extensions.js
-```
+Chrome에서 `src/manager/index.html`을 열고 프로젝트 폴더를 선택한 뒤 **Save & Generate**를 누릅니다.
 
 ### 1단계: 확장 로드
 
@@ -51,8 +51,8 @@ URL 변경은 숏컷 매니저에서 하고, 재생성 후 `chrome://extensions`
 
 URL 설정은 숏컷 매니저에서 중앙 관리합니다. (확장별 옵션 페이지는 제거되었습니다.)
 
-1. 숏컷 매니저를 엽니다. Windows에서는 `Open-Manager.vbs` 또는 `Open-Manager.bat`를 더블클릭하고, macOS에서는 `open-manager.command`를 더블클릭하거나, 터미널에서 `node scripts\manager.js`를 실행합니다.
-2. 원하는 숏컷의 대상 URL을 입력하고 `Save & Generate`를 누른 뒤, 페이지 안의 확인 창에서 생성 여부를 확인합니다.
+1. 숏컷 매니저를 엽니다. Windows에서는 `Open-Manager.vbs` 또는 `Open-Manager.bat`를 더블클릭하고, macOS에서는 `open-manager.command`를 더블클릭하거나, `src/manager/index.html`을 Chrome으로 엽니다.
+2. **프로젝트 폴더 선택**에서 이 저장소를 선택하고 파일 편집을 허용한 뒤, 원하는 숏컷의 대상 URL을 입력하고 `Save & Generate`를 누른 뒤, 페이지 안의 확인 창에서 생성 여부를 확인합니다.
 3. Chrome 확장 관리 화면에서 해당 확장을 새로고침(또는 새로 로드)합니다.
 4. Chrome 툴바에서 해당 Omni-Shortcut 아이콘을 클릭합니다.
 
@@ -79,13 +79,11 @@ Chrome에 여러 디렉터리를 각각 로드하면 툴바에 여러 바로가�
 
 ## 숏컷 매니저 (GUI)
 
-CLI 생성 스크립트 대신 브라우저 기반 GUI로 숏컷을 관리할 수 있습니다. Windows에서는 저장소 루트의 `Open-Manager.vbs` 또는 `Open-Manager.bat`를 더블클릭하고, macOS에서는 `open-manager.command`를 더블클릭하면 됩니다. 터미널에서는 다음 명령을 사용합니다.
+별도 설치 없이 브라우저 기반 GUI로 숏컷을 관리할 수 있습니다. Windows에서는 저장소 루트의 `Open-Manager.vbs` 또는 `Open-Manager.bat`를 더블클릭하고, macOS에서는 `open-manager.command`를 더블클릭하면 됩니다.
 
-```powershell
-node scripts\manager.js
-```
+Chrome에서 `src/manager/index.html`을 엽니다.
 
-실행하면 `http://127.0.0.1:8151`이 브라우저에서 열립니다. 매니저에서 다음을 할 수 있습니다.
+실행 후 **프로젝트 폴더 선택**에서 이 저장소 폴더를 선택하고 파일 편집을 허용합니다. Windows에서 기본 브라우저가 Chrome이 아니면 `src/manager/index.html`을 Chrome으로 직접 엽니다. 매니저를 다시 열 때 폴더를 다시 선택합니다. 매니저에서 다음을 할 수 있습니다.
 
 - 숏컷 패키지 개수 변경과 재생성 (prune 옵션 포함)
 - 로컬 안전 모드(권장)와 고정 ID 모드 선택
@@ -130,9 +128,6 @@ chrome-omni-shortcuts/
     TROUBLESHOOTING.md
   config/
     extensions.json
-  scripts/
-    generate-extensions.js
-    manager.js
   src/
     extension-template/
     manager/
@@ -140,13 +135,11 @@ chrome-omni-shortcuts/
 
 ## 개발 상태
 
-현재는 별도의 빌드 과정이나 자동 테스트 설정이 없습니다. 변경 후에는 Chrome에서 각 확장을 압축해제된 확장 프로그램으로 로드해 수동으로 확인합니다.
+별도의 빌드 과정이나 패키지 매니저가 필요 없습니다. 브라우저 회귀 검사는 Chrome에서 `tests/browser.html`을 열고 테스트용 임시 폴더를 선택하면 실행됩니다. 검사 결과는 페이지에 표시되고, 검사 전용 하위 폴더는 종료 시 삭제됩니다. 확장 설치·아이콘·탭 이동은 Chrome에서 각 확장을 로드해 확인합니다.
 
 공통 확장 코드는 `src/extension-template/`에서 관리하고, 다음 명령으로 `extensions/shortcut-*` 결과물을 생성합니다.
 
-```powershell
-node scripts\generate-extensions.js
-```
+Chrome에서 `src/manager/index.html`을 열고 프로젝트 폴더를 선택한 뒤 **Save & Generate**를 누릅니다.
 
 자세한 구조와 유지보수 기준은 `docs/ARCHITECTURE.md`를 참고하세요.
 

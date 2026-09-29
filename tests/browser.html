@@ -1,0 +1,74 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>브라우저 회귀 테스트</title>
+<pre id="result">실행 중…</pre>
+<script src="../src/manager/workspace.js"></script>
+<script>
+(async () => {
+  const lines = [];
+  const check = (ok, label) => {if (!ok) throw new Error(label); lines.push(`PASS ${label}`);};
+  const reject = async (fn, label) => {let failed = false; try {await fn();} catch {failed = true;} check(failed, label);};
+  // 사용자 파일 대신 브라우저 전용 임시 파일 시스템에서 실제 파일 API를 검증한다.
+  const storage = location.protocol === "file:" ? await new Promise((resolve, reject) => {
+    const button = document.createElement("button");
+    button.textContent = "테스트용 임시 폴더 선택";
+    document.body.prepend(button);
+    button.onclick = async () => {
+      try { resolve(await showDirectoryPicker({mode:"readwrite"})); button.remove(); }
+      catch (error) { reject(error); }
+    };
+  }) : await navigator.storage.getDirectory();
+  const root = await storage.getDirectoryHandle(`omni-test-${Date.now()}`, {create:true});
+  try {
+    workspace.root = root;
+    workspace.configDir = await root.getDirectoryHandle("config", {create:true});
+    workspace.template = await root.getDirectoryHandle("template", {create:true});
+    const icons = Object.fromEntries([16,24,32,48,128].map(n => [n,"icon.svg"]));
+    const manifest = {manifest_version:3, name:"__SHORTCUT_NAME__", description:"__SHORTCUT_DESCRIPTION__", version:"1.0", background:{service_worker:"background.js"}, action:{default_title:"__SHORTCUT_ACTION_TITLE__", default_icon:icons}, icons, permissions:["storage","tabs"],host_permissions:["https://t0.gstatic.com/*"]};
+    await writeFile(workspace.template,"manifest.json",JSON.stringify(manifest));
+    await writeFile(workspace.template,"background.js",'const url = "__SHORTCUT_DEFAULT_URL__";');
+    await writeFile(workspace.template,"icon.svg","<svg/>");
+    await writeFile(workspace.template,"binary.bin",new Uint8Array([0,255,42]));
+    const config = {count:2,start:1,manifestKeyMode:"omit",directoryTemplate:"shortcut-{digit}",nameTemplate:'테스트 "{digit}"',descriptionTemplate:"설명 {digit}",actionTitleTemplate:"제목 {digit}",shortcuts:{"1":{url:'https://example.com/?q="hello"',label:"한글",key:""}}};
+    await workspace.save(config);
+    let result = await workspace.generate();
+    check(result.generated.length === 2,"로컬 안전 모드 생성");
+    const output = await root.getDirectoryHandle("extensions");
+    const first = await output.getDirectoryHandle("shortcut-01");
+    const generated = JSON.parse(await readText(first,"manifest.json"));
+    check(generated.name === '테스트 "01"' && !('key' in generated),"JSON 이스케이프 및 key 생략");
+    check((await readText(first,"background.js")).includes('\\"hello\\"'),"URL 문자열 이스케이프");
+    const binary = new Uint8Array(await (await (await first.getFileHandle("binary.bin")).getFile()).arrayBuffer());
+    check(binary[1] === 255 && binary.length === 3,"바이너리 템플릿 보존");
+    await reject(() => validateConfig({...config,count:65}),"개수 범위 검증");
+    await reject(() => validateConfig({...config,directoryTemplate:"../escape"}),"경로 탈출 차단");
+    await reject(() => validateConfig({...config,shortcuts:{1:{url:"javascript:alert(1)"}}}),"URL 스킴 차단");
+    await reject(() => parseManifestKey("a".repeat(32)),"확장 ID를 공개키로 거부");
+    const weak = await crypto.subtle.generateKey({name:"RSASSA-PKCS1-v1_5",modulusLength:1024,publicExponent:new Uint8Array([1,0,1]),hash:"SHA-256"},true,["sign","verify"]);
+    const weakKey = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey("spki",weak.publicKey))));
+    await reject(() => parseManifestKey(weakKey),"RSA 1024비트 거부");
+    const key = await generateManifestKey();
+    check(/^[a-p]{32}$/.test(key.id),"RSA 2048 및 확장 ID 생성");
+    const fixed = {...config,manifestKeyMode:"include",shortcuts:{1:{key:key.key},2:{key:key.key}}};
+    check((await buildKeyAudit(fixed)).summary.duplicate === 2,"중복 키 감사");
+    await workspace.save(fixed);
+    await reject(() => workspace.generate(),"중복 키 생성 차단");
+    const repaired = await autoFixManifestKeys(fixed);
+    check(repaired.updated.length === 1 && repaired.audit.summary.actionNeeded === 0,"중복 키 자동복구");
+    await workspace.save(repaired.config);
+    await workspace.generate();
+    check(JSON.parse(await readText(first,"manifest.json")).key === key.key,"고정 ID 모드 공개키 유지");
+    const broken = {...fixed,shortcuts:{1:{key:"bad"},2:{key:""}}};
+    check((await autoFixManifestKeys(broken)).audit.summary.actionNeeded === 0,"오류·누락 키 자동복구");
+    await output.getDirectoryHandle("keep-me",{create:true});
+    await workspace.save({...config,count:1});
+    result = await workspace.generate({prune:true});
+    check(result.pruned.join() === "extensions/shortcut-02","초과 패키지만 prune");
+    await output.getDirectoryHandle("keep-me");
+    check(!('key' in JSON.parse(await readText(first,"manifest.json"))),"고정 모드에서 로컬 모드 전환");
+    const response = await workspace.request("/api/config",{body:JSON.stringify({count:0})});
+    check(!response.ok && (await workspace.config()).count === 1,"실패한 설정 저장은 기존 파일 유지");
+    document.getElementById("result").textContent = lines.join("\n") + "\nALL PASSED";
+  } finally {await storage.removeEntry(root.name,{recursive:true});}
+})().catch(error => {document.getElementById("result").textContent = `FAIL ${error.name}: ${error.message} ${error.stack || ""}`;});
+</script>
